@@ -333,6 +333,18 @@
         }
         continue;
       }
+      if (api.member) {
+        // A helper that needs a permission of its own, such as Widget.scanner (the camera).
+        const [owner, name] = api.member.split(".");
+        for (let i = 0; i + 2 < tokens.length; i++) {
+          if (tokens[i].t === "id" && tokens[i].v === owner && tokens[i + 1].t === "punct" && (tokens[i + 1].v === "." || tokens[i + 1].v === "?.")
+            && tokens[i + 2].t === "id" && tokens[i + 2].v === name) {
+            if (!used.has(api.permission)) used.set(api.permission, tokens[i]);
+            break;
+          }
+        }
+        continue;
+      }
       for (let i = 0; i < tokens.length; i++) {
         const tok = tokens[i];
         if (tok.t !== "id" || tok.v !== api.global) continue;
@@ -342,6 +354,10 @@
           const owner = tokens[i - 2];
           if (!owner || !["globalThis", "window", "self"].includes(owner.v)) continue;
         }
+        // Members that need no permission (`Location.geocode`): a direct call to one does not count.
+        // Anything less direct (`const { geocode } = Location`) still counts, which errs on the side of asking.
+        const dot = tokens[i + 1], member = tokens[i + 2];
+        if (api.except && dot && dot.t === "punct" && (dot.v === "." || dot.v === "?.") && member && member.t === "id" && api.except.includes(member.v)) continue;
         if (!used.has(api.permission)) used.set(api.permission, tok);
       }
     }
