@@ -19,7 +19,7 @@ app <── index.json + script files on GitHub Pages <── publish.yml <─�
 
 | Path | What it is |
 |---|---|
-| `scripts/<id>/` | One folder per script: `script.js`, `meta.json`, `icon.png`, optional `README.md`. Starts with 60 scripts, at least two in each of the 26 App Store categories |
+| `scripts/<id>/` | One folder per script: `script.js`, `meta.json`, `icon.png`, optional `README.md`. Starts with one script, Repo Stats; new ones arrive by pull request |
 | `schema/meta.schema.json` | JSON Schema for `meta.json` |
 | `tools/analyzer/` | `analyzer-core.js` and `rules.json`: the same two files the app runs on imported scripts |
 | `tools/*.mjs` | CI entry points: `review-pr`, `analyze`, `validate-meta`, `check-icon`, `build-index` |
@@ -37,22 +37,22 @@ it are relative to `index.json`.
   "generatedAt": "2026-01-02T03:04:05.000Z",
   "scripts": [
     {
-      "id": "hello-widget",
-      "name": "Hello Widget",
+      "id": "repo-stats",
+      "name": "Repo Stats",
       "author": "scriptwell",
       "version": "1.0.0",
-      "description": "…",
-      "permissions": [],
+      "description": "Stars, forks and open issues for any GitHub repository",
+      "permissions": ["network"],
       "minAppVersion": "1.0",
       "widgetSizes": ["small", "medium"],
       "license": "MIT",
-      "category": "utilities",
+      "category": "developer-tools",
       "status": "public",
       "sha256": "…hex of script.js bytes…",
       "size": 612,
-      "scriptPath": "scripts/hello-widget/script.js",
-      "iconPath": "scripts/hello-widget/icon.png",
-      "readmePath": "scripts/hello-widget/README.md",
+      "scriptPath": "scripts/repo-stats/script.js",
+      "iconPath": "scripts/repo-stats/icon.png",
+      "readmePath": "scripts/repo-stats/README.md",
       "updatedAt": "2026-01-01T12:00:00+00:00"
     }
   ]
@@ -139,7 +139,7 @@ npm test
 ```
 
 ```bash
-node analyze.mjs ../scripts/hello-widget/script.js
+node analyze.mjs ../scripts/repo-stats/script.js
 ```
 
 ```bash

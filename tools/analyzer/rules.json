@@ -15,13 +15,13 @@
     },
     "calendar": {
       "title": "Calendar",
-      "summary": "Read events from your calendars.",
-      "detail": "The script can read event titles, times, locations and notes. iOS will also ask you separately."
+      "summary": "Read, add and change events in your calendars.",
+      "detail": "The script can read event titles, times, locations and notes, and can add, change and delete events. iOS will also ask you separately."
     },
     "reminders": {
       "title": "Reminders",
-      "summary": "Read, add and complete reminders.",
-      "detail": "The script can read your reminders, add new ones and mark them complete. iOS will also ask you separately."
+      "summary": "Read, add, change and complete reminders.",
+      "detail": "The script can read your reminders, add new ones, change them, mark them complete and delete them. iOS will also ask you separately."
     },
     "notifications": {
       "title": "Notifications",
@@ -32,16 +32,54 @@
       "title": "Clipboard",
       "summary": "Read and replace the clipboard.",
       "detail": "The script can read whatever you last copied and can replace it."
+    },
+    "camera": {
+      "title": "Camera",
+      "summary": "Take photos and scan codes with the camera.",
+      "detail": "The script can open the camera for you to take a photo, and can show a live scanner for codes and text while its screen is open. iOS will also ask you separately."
+    },
+    "microphone": {
+      "title": "Microphone",
+      "summary": "Listen to you and turn speech into text.",
+      "detail": "The script can show a listening screen and receive the text of what you say while it is open. Speech is turned into text on the device. iOS will also ask you separately."
+    },
+    "contacts": {
+      "title": "Contacts",
+      "summary": "Search your contacts.",
+      "detail": "The script can search your contacts by name and read their phone numbers, email addresses and birthdays. iOS will also ask you separately."
+    },
+    "health": {
+      "title": "Health",
+      "summary": "Read and add health data such as steps and weight.",
+      "detail": "The script can read the health data it asks for (steps, heart rate, sleep, workouts and more) and add entries such as weight or water. iOS will ask you which data, separately."
+    },
+    "cloudai": {
+      "title": "Cloud AI",
+      "summary": "Use the cloud AI model with your API key.",
+      "detail": "The script can send text to the cloud model you set up in Settings, using your API key. Those requests leave the device and may cost money."
+    },
+    "bluetooth": {
+      "title": "Bluetooth",
+      "summary": "Find and talk to Bluetooth devices nearby.",
+      "detail": "The script can scan for Bluetooth Low Energy devices nearby, connect to them, and read and write their data while it runs. iOS will also ask you separately."
     }
   },
 
   "apis": [
     { "global": "fetch", "permission": "network" },
-    { "global": "Location", "permission": "location" },
+    { "global": "Location", "permission": "location", "except": ["geocode", "reverseGeocode", "search", "distance"] },
     { "global": "Calendar", "permission": "calendar" },
     { "global": "Reminders", "permission": "reminders" },
     { "global": "Notification", "permission": "notifications" },
     { "global": "Clipboard", "permission": "clipboard" },
+    { "global": "Camera", "permission": "camera" },
+    { "member": "Widget.scanner", "permission": "camera" },
+    { "member": "Speech.listen", "permission": "microphone" },
+    { "member": "Contacts.find", "permission": "contacts" },
+    { "global": "Health", "permission": "health" },
+    { "member": "AI.cloud", "permission": "cloudai" },
+    { "global": "Bluetooth", "permission": "bluetooth" },
+    { "global": "WebSocket", "permission": "network" },
     { "property": "src", "permission": "network" }
   ],
 

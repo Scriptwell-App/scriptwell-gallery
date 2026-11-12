@@ -48,7 +48,7 @@ outside it.
 | `author` | Your GitHub handle, without `@`. Should be the account that opens the pull request. |
 | `version` | `x.y.z`. Bump it whenever `script.js` changes. |
 | `description` | 1–280 characters. Say what the script does and what it contacts. |
-| `permissions` | Any of `network`, `location`, `calendar`, `reminders`, `notifications`, `clipboard`. Must match the `// @permissions` line in `script.js`. `[]` for none. |
+| `permissions` | Any of `network`, `location`, `calendar`, `reminders`, `notifications`, `clipboard`, `camera`, `microphone`, `contacts`, `health`, `cloudai`, `bluetooth`. Must match the `// @permissions` line in `script.js`. `[]` for none. |
 | `minAppVersion` | Lowest Scriptwell version it runs on, such as `1.0`. |
 | `widgetSizes` | Any of `small`, `medium`, `large`, `extraLarge`, `circular`, `rectangular`, `inline`. `[]` if there is no widget. |
 | `license` | SPDX id. Default `MIT`. |

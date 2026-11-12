@@ -21,13 +21,20 @@ can hide any script at any time.
 - Declare every permission. Undeclared use is rejected automatically.
 - Say in the description or README which hosts a script contacts and what it
   sends them.
-- Send personal data (location, calendar, reminders, clipboard) off the
+- Send personal data (location, calendar, reminders, clipboard, photos) off the
   device only when that is the obvious point of the script, and only to the
   service the description names.
 - No analytics, tracking, advertising identifiers or fingerprinting.
 - No collecting data for the author. A script works for the person running it.
-- If a script needs an API key, the person running it supplies their own. Never
-  ship a key.
+- If a script needs an API key, the person running it supplies their own: ask
+  for it with `Secrets.require("name")`, which stores it in their Keychain.
+  Never ship a key, and never keep one in `Storage` or `Storage.shared`.
+- Health and Contacts data stay on the device unless sending them somewhere is
+  the obvious point of the script, and then only to the service the description
+  names.
+- A script that uses `AI.cloud` must say so in its description. The text goes
+  to the cloud model the person set up, with their own API key, and costs them
+  money.
 
 ## What gets rejected
 
