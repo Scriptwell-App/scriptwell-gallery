@@ -1,0 +1,21 @@
+{
+  "author" : "scriptwell",
+  "category" : "health-fitness",
+  "description" : "A pixel-art sloth that only wakes up when you move. Steps from Apple Health unsloth it and earn leaves to feed it.",
+  "id" : "unlsoth",
+  "license" : "MIT",
+  "minAppVersion" : "1.0",
+  "name" : "Unlsoth",
+  "permissions" : [
+    "health"
+  ],
+  "version" : "1.0.0",
+  "widgetSizes" : [
+    "small",
+    "medium",
+    "large",
+    "circular",
+    "rectangular",
+    "inline"
+  ]
+}
