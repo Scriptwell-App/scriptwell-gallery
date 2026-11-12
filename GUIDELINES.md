@@ -69,8 +69,7 @@ but not their purpose. We will say why.
 Anyone can report a script:
 
 - in the app, with **Report script** on the script's page, or
-- by opening a [report issue](../../issues/new?template=report-script.yml), or
-- privately, by email (see [Contact](#contact)).
+- by opening a [report issue](../../issues/new?template=report-script.yml).
 
 A maintainer looks at every report, normally within two working days. If the
 script breaks these guidelines, the maintainer sets `"status": "hidden"` in
@@ -89,13 +88,6 @@ seeing an author's scripts on their own device.
 
 ## Copyright
 
-If you believe a script infringes your copyright, email the contact address
-with the script id, the work concerned and your contact details. We hide the
-script while we look into it.
-
-## Contact
-
-Gallery maintainers: **gallery@scriptwell.example**
-
-Use this address for private reports, takedown requests and questions about
-these guidelines. The same address is shown in the app under Settings.
+If you believe a script infringes your copyright, open a
+[report issue](../../issues/new?template=report-script.yml) with the script id
+and the work concerned. We hide the script while we look into it.

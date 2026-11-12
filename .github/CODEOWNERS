@@ -2,14 +2,13 @@
 # maintainer's review. Combined with branch protection ("Require review from
 # Code Owners"), a submission cannot weaken the checks that review it.
 #
-# Replace the placeholder team below with your own user or team before
-# pushing this repository (see README.md, "Maintainer quick start").
+# The owner reviews changes to the checks and every script before it is published.
 
-/tools/      @scriptwell-maintainers
-/schema/     @scriptwell-maintainers
-/.github/    @scriptwell-maintainers
-/GUIDELINES.md   @scriptwell-maintainers
-/CONTRIBUTING.md @scriptwell-maintainers
+/tools/      @va4w
+/schema/     @va4w
+/.github/    @va4w
+/GUIDELINES.md   @va4w
+/CONTRIBUTING.md @va4w
 
 # Every script is reviewed by a maintainer before it is published.
-/scripts/    @scriptwell-maintainers
+/scripts/    @va4w
