@@ -1,0 +1,21 @@
+{
+  "author" : "va4w",
+  "category" : "utilities",
+  "description" : "Pixel-art migraine risk forecast from local Apple Weather (pressure swings, humidity, temperature, storms)",
+  "id" : "migraine-risk",
+  "license" : "MIT",
+  "minAppVersion" : "1.0",
+  "name" : "Migraine Risk",
+  "permissions" : [
+    "location"
+  ],
+  "version" : "1.0.0",
+  "widgetSizes" : [
+    "small",
+    "medium",
+    "large",
+    "circular",
+    "rectangular",
+    "inline"
+  ]
+}
