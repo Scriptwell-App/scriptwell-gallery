@@ -62,7 +62,7 @@ it are relative to `index.json`.
       "blurb": "Stars, forks and open issues for any repository, right on your Home Screen.",
       "stars": 12,
       "installs": null,
-      "starsURL": "https://github.com/OWNER/REPO/issues/4",
+      "starsURL": "https://github.com/va4w/scriptwell-gallery/issues/4",
       "homepage": null
     }
   ],
@@ -86,27 +86,6 @@ The app's Gallery tab shows shelves built from `index.json` alone:
 - **Categories**: every category that has at least one public script, with counts.
 
 Search in the app ranks matches by name, then id and author, then category, permissions and description, and needs every word to match; results can be narrowed by permission and "has a widget", and sorted by name, newest, recently updated or most starred.
-
-## Maintainer quick start
-
-1. **Create the repo** from this folder and push to `main`. Make it public.
-2. **Replace placeholders:** `@scriptwell-maintainers` in `.github/CODEOWNERS`,
-   `OWNER/REPO` in `.github/ISSUE_TEMPLATE/*.yml`, and
-   `gallery@scriptwell.example` in `GUIDELINES.md` and the issue template.
-3. **Commit a lockfile:** run `npm install` once in `tools/` and commit
-   `tools/package-lock.json`. The workflows use `npm ci` when it exists.
-4. **Enable Pages:** Settings → Pages → Source: **GitHub Actions**.
-   It must be **GitHub Actions**, not "Deploy from a branch". With the branch
-   option GitHub publishes the README as a website instead, and `index.json`
-   returns 404 even though the publish workflow reports success.
-5. **Protect `main`:** require a pull request, require review from Code
-   Owners, require the status check **Gallery checks**, and disallow bypass.
-6. **Actions settings:** Settings → Actions → General → require approval for
-   first-time contributors' workflow runs.
-7. **Labels** (created automatically on first use; create them up front for
-   colors): `needs-changes`, `needs-careful-review`, `checks-passed`, `report`.
-8. **Point the app at it:** set the gallery base URL in the app to
-   `https://<owner>.github.io/<repo>/` and the report URL to this repo.
 
 ## Reviewing a submission (about five minutes)
 
