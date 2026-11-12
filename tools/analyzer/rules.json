@@ -62,6 +62,11 @@
       "title": "Bluetooth",
       "summary": "Find and talk to Bluetooth devices nearby.",
       "detail": "The script can scan for Bluetooth Low Energy devices nearby, connect to them, and read and write their data while it runs. iOS will also ask you separately."
+    },
+    "motion": {
+      "title": "Motion",
+      "summary": "Read the compass, motion sensors, steps and altitude.",
+      "detail": "The script can read the compass heading, the accelerometer and gyroscope, your step count and floors climbed, and barometric pressure and altitude while it runs. iOS will also ask you separately about steps and altitude (Motion & Fitness)."
     }
   },
 
@@ -79,6 +84,8 @@
     { "global": "Health", "permission": "health" },
     { "member": "AI.cloud", "permission": "cloudai" },
     { "global": "Bluetooth", "permission": "bluetooth" },
+    { "global": "Compass", "permission": "motion" },
+    { "global": "Motion", "permission": "motion" },
     { "global": "WebSocket", "permission": "network" },
     { "property": "src", "permission": "network" }
   ],
