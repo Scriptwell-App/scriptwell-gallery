@@ -1,0 +1,16 @@
+{
+  "author" : "va4w",
+  "category" : "utilities",
+  "description" : "A quick colour vision screening with dot plates, in the style of Ishihara tests",
+  "id" : "colour-vision-test",
+  "license" : "MIT",
+  "minAppVersion" : "1.0",
+  "name" : "Colour Vision Test",
+  "permissions" : [
+
+  ],
+  "version" : "1.0.0",
+  "widgetSizes" : [
+
+  ]
+}
