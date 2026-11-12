@@ -1,0 +1,12 @@
+{
+  "id": "contrast-checker",
+  "name": "Contrast Checker",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Check whether two colours have enough contrast for readable text (WCAG)",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "graphics-design"
+}

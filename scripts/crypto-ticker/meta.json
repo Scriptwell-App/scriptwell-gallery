@@ -1,0 +1,17 @@
+{
+  "id": "crypto-ticker",
+  "name": "Crypto Ticker",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Bitcoin, Ether and other prices, with the change since midnight",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium"
+  ],
+  "license": "MIT",
+  "category": "finance"
+}

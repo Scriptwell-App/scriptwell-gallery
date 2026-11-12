@@ -1,0 +1,17 @@
+{
+  "id": "word-of-the-day",
+  "name": "Word of the Day",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "A new word every day, with its meaning",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium"
+  ],
+  "license": "MIT",
+  "category": "education"
+}

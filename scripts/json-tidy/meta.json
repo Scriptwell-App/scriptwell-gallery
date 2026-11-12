@@ -1,0 +1,14 @@
+{
+  "id": "json-tidy",
+  "name": "JSON Tidy",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Format and validate the JSON on your clipboard",
+  "permissions": [
+    "clipboard"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "developer-tools"
+}

@@ -1,0 +1,19 @@
+{
+  "id": "distance-home",
+  "name": "Distance Home",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "How far you are from home and which way it is, at a glance",
+  "permissions": [
+    "location"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "circular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "navigation"
+}

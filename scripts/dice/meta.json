@@ -1,0 +1,15 @@
+{
+  "id": "dice",
+  "name": "Dice",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Roll dice from the Home Screen or the app: one to five dice, any size",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium"
+  ],
+  "license": "MIT",
+  "category": "games"
+}

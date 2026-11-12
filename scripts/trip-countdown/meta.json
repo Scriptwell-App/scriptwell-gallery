@@ -1,0 +1,15 @@
+{
+  "id": "trip-countdown",
+  "name": "Trip Countdown",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Count the sleeps until your next trip and tick off a packing list on the way",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium"
+  ],
+  "license": "MIT",
+  "category": "travel"
+}

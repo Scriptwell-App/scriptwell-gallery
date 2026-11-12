@@ -1,0 +1,12 @@
+{
+  "id": "2048",
+  "name": "2048",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "The sliding-tile puzzle: combine tiles to reach 2048",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "games"
+}

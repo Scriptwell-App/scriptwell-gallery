@@ -1,0 +1,16 @@
+{
+  "id": "currency-converter",
+  "name": "Currency Converter",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Convert between currencies with daily European Central Bank rates",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small"
+  ],
+  "license": "MIT",
+  "category": "finance"
+}

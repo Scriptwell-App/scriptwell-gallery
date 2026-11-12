@@ -322,8 +322,17 @@
     const knownPermissions = Object.keys(rules.permissions || {});
     const declared = (options.declaredPermissions || manifest.permissions).map((p) => String(p).toLowerCase());
     const used = new Map(); // permission -> first token
+    // Permissions implied by a property name (an image `src:` needs the network).
+    // These explain a declared permission but are too ambiguous to demand one.
+    const implied = new Set();
 
     for (const api of rules.apis || []) {
+      if (api.property) {
+        for (let i = 0; i + 1 < tokens.length; i++) {
+          if (tokens[i].t === "id" && tokens[i].v === api.property && tokens[i + 1].t === "punct" && tokens[i + 1].v === ":") { implied.add(api.permission); break; }
+        }
+        continue;
+      }
       for (let i = 0; i < tokens.length; i++) {
         const tok = tokens[i];
         if (tok.t !== "id" || tok.v !== api.global) continue;
@@ -381,7 +390,7 @@
           }
         }
         for (const p of declared) {
-          if (knownPermissions.includes(p) && !used.has(p)) {
+          if (knownPermissions.includes(p) && !used.has(p) && !implied.has(p)) {
             findings.push({ ruleId: "unused-permission", severity: "soft", message: "Declares the \"" + p + "\" permission but never uses it.", line: 1, column: 1 });
           }
         }

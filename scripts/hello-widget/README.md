@@ -1,10 +1,11 @@
 # Hello Widget
 
-A greeting and the time the widget last refreshed.
+A minimal widget to start from: a greeting and the time it last refreshed.
 
-- **Permissions:** none
+- **Type:** Widget
 - **Widget sizes:** small, medium
+- **Permissions:** none
 
-Install it from the Gallery tab in Scriptwell, then add a Scriptwell widget to
-your Home Screen and pick "Hello Widget". The source is short on purpose: read
-it, then change it.
+## Notes
+
+The smallest useful Scriptwell widget. It needs no permissions. Script.widget registers a function that returns a plain object tree; the app renders that tree natively.
