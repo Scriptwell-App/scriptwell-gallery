@@ -1,0 +1,18 @@
+{
+  "author" : "va4w",
+  "category" : "news",
+  "description" : "A cow that tells you how hot or cold the current news is, or says your widget Parameter",
+  "id" : "cowsay-news",
+  "license" : "MIT",
+  "minAppVersion" : "1.0",
+  "name" : "Cowsay News",
+  "permissions" : [
+    "network"
+  ],
+  "version" : "1.0.0",
+  "widgetSizes" : [
+    "small",
+    "medium",
+    "large"
+  ]
+}
