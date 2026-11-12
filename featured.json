@@ -1,8 +1,9 @@
 {
   "$comment": "Maintainers' picks for the gallery's front page. Ids must exist in scripts/. The first hero is the banner; the rest and editorsChoice fill the Editors' Choice shelf. Blurbs are one line.",
-  "hero": ["repo-stats"],
+  "hero": ["cowsay-news", "repo-stats"],
   "editorsChoice": [],
   "blurbs": {
+    "cowsay-news": "A cow takes the temperature of today's headlines, or says whatever you tell it to.",
     "repo-stats": "Stars, forks and open issues for any repository, right on your Home Screen."
   }
 }
