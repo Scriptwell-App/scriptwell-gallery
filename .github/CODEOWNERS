@@ -2,8 +2,7 @@
 # maintainer's review. Combined with branch protection ("Require review from
 # Code Owners"), a submission cannot weaken the checks that review it.
 #
-# Replace the placeholder team below with your own user or team before
-# pushing this repository (see README.md, "Maintainer quick start").
+# Replace the placeholder team below with your own user or team.
 
 /tools/      @scriptwell-maintainers
 /schema/     @scriptwell-maintainers

@@ -1,8 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Report privately
-    url: https://github.com/OWNER/REPO/blob/main/GUIDELINES.md#contact
-    about: Email address for reports you do not want to make in public.
   - name: Gallery guidelines
-    url: https://github.com/OWNER/REPO/blob/main/GUIDELINES.md
+    url: https://github.com/va4w/scriptwell-gallery/blob/main/GUIDELINES.md
     about: What is and is not allowed in the gallery.
