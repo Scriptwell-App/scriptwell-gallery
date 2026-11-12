@@ -7,6 +7,7 @@ Pages.
 
 - **Want to submit a script?** Read [CONTRIBUTING.md](CONTRIBUTING.md) and [GUIDELINES.md](GUIDELINES.md).
 - **Want to report a script?** Use "Report script" in the app, or open a [report issue](../../issues/new?template=report-script.yml).
+- **Privacy:** what the app and the gallery do and do not collect is in [PRIVACY.md](PRIVACY.md).
 - **Maintaining this repo?** Read on.
 
 ## How it works

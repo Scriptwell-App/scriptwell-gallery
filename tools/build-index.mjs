@@ -97,6 +97,7 @@ export function indexEntry(result, updatedAt, hasReadme, extras = {}) {
 
 function renderHtml(entries, repository) {
   const guidelines = repository ? `https://github.com/${repository}/blob/main/GUIDELINES.md` : "GUIDELINES.md";
+  const privacy = repository ? `https://github.com/${repository}/blob/main/PRIVACY.md` : "PRIVACY.md";
   const rows = entries
     .filter((entry) => entry.status === "public")
     .map((entry) => `      <li><strong>${escapeHtml(entry.name)}</strong> ${escapeHtml(entry.version)} by ${escapeHtml(entry.author)}<br>${escapeHtml(entry.description)}</li>`)
@@ -115,7 +116,7 @@ function renderHtml(entries, repository) {
   <body>
     <h1>Scriptwell Gallery</h1>
     <p>Reviewed community scripts for the Scriptwell app. Browse and install them from the Gallery tab in the app.</p>
-    <p><a href="${escapeHtml(guidelines)}">Gallery guidelines</a> · <a href="index.json">index.json</a></p>
+    <p><a href="${escapeHtml(guidelines)}">Gallery guidelines</a> · <a href="${escapeHtml(privacy)}">Privacy policy</a> · <a href="index.json">index.json</a></p>
     <ul>
 ${rows}
     </ul>
@@ -193,6 +194,8 @@ export function buildIndex({ root, out, now = new Date() }) {
     writeFileSync(path.join(out, ".nojekyll"), "");
     const guidelines = path.join(root, "GUIDELINES.md");
     if (existsSync(guidelines)) copyFileSync(guidelines, path.join(out, "GUIDELINES.md"));
+    const privacy = path.join(root, "PRIVACY.md");
+    if (existsSync(privacy)) copyFileSync(privacy, path.join(out, "PRIVACY.md"));
   }
   return { index, failures };
 }
