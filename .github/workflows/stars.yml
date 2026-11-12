@@ -1,0 +1,59 @@
+name: Count stars
+
+# Stars are 👍 reactions on one GitHub issue per script, labelled "stars" and
+# titled "Star: <id>". Anyone with a GitHub account can react; nobody has to
+# write anything. This workflow counts them into stats.json, which the publish
+# workflow folds into index.json. No analytics, no server, no accounts in the app.
+#
+# To open the issue for a new script, add the "stars" label to an issue titled
+# "Star: <id>" (the publish step does not create issues on its own).
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: stars
+  cancel-in-progress: true
+
+jobs:
+  count:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Count reactions
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const stats = {};
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner, repo: context.repo.repo, labels: "stars", state: "all", per_page: 100,
+            });
+            for (const issue of issues) {
+              const match = /^Star:\s*([a-z0-9][a-z0-9-]{2,49})\s*$/i.exec(issue.title || "");
+              if (!match || issue.pull_request) continue;
+              const id = match[1].toLowerCase();
+              if (!fs.existsSync(`scripts/${id}/meta.json`)) continue;
+              stats[id] = { stars: issue.reactions ? issue.reactions["+1"] || 0 : 0, starsURL: issue.html_url };
+            }
+            const ordered = Object.fromEntries(Object.keys(stats).sort().map((k) => [k, stats[k]]));
+            fs.writeFileSync("stats.json", JSON.stringify(ordered, null, 2) + "\n");
+            core.info(`Counted stars for ${Object.keys(ordered).length} script(s).`);
+
+      - name: Commit stats.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stats.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Update stars"
+          git push

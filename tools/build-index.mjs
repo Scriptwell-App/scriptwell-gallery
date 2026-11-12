@@ -11,7 +11,7 @@
  * - The app verifies each download against the sha256 recorded here.
  */
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { isMain, parseArgs, escapeHtml, TOOLS_DIR } from "./lib/common.mjs";
 import { review } from "./review-pr.mjs";
@@ -31,10 +31,42 @@ function lastCommitDate(root, relativeFolder, fallback) {
   }
 }
 
+function firstCommitDate(root, relativeFolder, fallback) {
+  try {
+    const out = execFileSync("git", ["log", "--diff-filter=A", "--format=%cI", "--", `${relativeFolder}/script.js`], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim().split("\n").filter(Boolean);
+    return out.length ? out[out.length - 1] : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/** featured.json: the maintainers' picks for the front page. Missing file means nothing is featured. */
+export function readFeatured(root) {
+  const file = path.join(root, "featured.json");
+  if (!existsSync(file)) return { hero: [], editorsChoice: [], blurbs: {} };
+  const raw = JSON.parse(readFileSync(file, "utf8"));
+  const ids = (list) => (Array.isArray(list) ? list.filter((id) => typeof id === "string") : []);
+  return { hero: ids(raw.hero), editorsChoice: ids(raw.editorsChoice), blurbs: raw.blurbs && typeof raw.blurbs === "object" ? raw.blurbs : {} };
+}
+
+/** stats.json: stars (and later installs) per script, written by the stars workflow. */
+export function readStats(root) {
+  const file = path.join(root, "stats.json");
+  if (!existsSync(file)) return {};
+  try { return JSON.parse(readFileSync(file, "utf8")) || {}; } catch { return {}; }
+}
+
 /** One index.json entry. Field names are a contract with the app; do not rename. */
-export function indexEntry(result, updatedAt, hasReadme) {
+export function indexEntry(result, updatedAt, hasReadme, extras = {}) {
   const meta = result.meta;
   const folder = `scripts/${result.id}`;
+  const featured = extras.featured || { hero: [], editorsChoice: [], blurbs: {} };
+  const stats = (extras.stats && extras.stats[meta.id]) || {};
+  const featuredAs = featured.hero.includes(meta.id) ? "hero" : featured.editorsChoice.includes(meta.id) ? "editorsChoice" : null;
   return {
     id: meta.id,
     name: meta.name,
@@ -53,6 +85,13 @@ export function indexEntry(result, updatedAt, hasReadme) {
     iconPath: `${folder}/icon.png`,
     readmePath: hasReadme ? `${folder}/README.md` : null,
     updatedAt,
+    createdAt: extras.createdAt || updatedAt,
+    featured: featuredAs,
+    blurb: typeof featured.blurbs[meta.id] === "string" ? featured.blurbs[meta.id].slice(0, 140) : null,
+    stars: Number.isInteger(stats.stars) ? stats.stars : null,
+    installs: Number.isInteger(stats.installs) ? stats.installs : null,
+    starsURL: typeof stats.starsURL === "string" && stats.starsURL.startsWith("https://github.com/") ? stats.starsURL : null,
+    homepage: meta.homepage || null,
   };
 }
 
@@ -97,6 +136,11 @@ export function buildIndex({ root, out, now = new Date() }) {
   const failures = [];
   const entries = [];
   const generatedAt = now.toISOString();
+  const featured = readFeatured(root);
+  const stats = readStats(root);
+  for (const id of [...featured.hero, ...featured.editorsChoice]) {
+    if (!outcome.results.some((r) => r.id === id)) failures.push(`featured.json names "${id}", which is not in scripts/`);
+  }
 
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
@@ -121,7 +165,8 @@ export function buildIndex({ root, out, now = new Date() }) {
 
     const folder = path.join(root, "scripts", result.id);
     const hasReadme = existsSync(path.join(folder, "README.md"));
-    entries.push(indexEntry(result, lastCommitDate(root, `scripts/${result.id}`, generatedAt), hasReadme));
+    const updatedAt = lastCommitDate(root, `scripts/${result.id}`, generatedAt);
+    entries.push(indexEntry(result, updatedAt, hasReadme, { featured, stats, createdAt: firstCommitDate(root, `scripts/${result.id}`, updatedAt) }));
 
     if (!hidden) {
       const target = path.join(out, "scripts", result.id);
@@ -133,7 +178,14 @@ export function buildIndex({ root, out, now = new Date() }) {
   }
 
   entries.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const index = { schemaVersion: SCHEMA_VERSION, generatedAt, scripts: entries };
+  const published = new Set(entries.filter((e) => e.status === "public").map((e) => e.id));
+  const index = {
+    schemaVersion: SCHEMA_VERSION,
+    generatedAt,
+    hero: featured.hero.filter((id) => published.has(id)),
+    editorsChoice: featured.editorsChoice.filter((id) => published.has(id)),
+    scripts: entries,
+  };
 
   if (failures.length === 0) {
     writeFileSync(path.join(out, "index.json"), JSON.stringify(index, null, 2) + "\n");

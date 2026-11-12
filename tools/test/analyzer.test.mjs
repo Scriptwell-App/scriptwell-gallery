@@ -212,7 +212,7 @@ test("meta.json schema violations are hard", () => {
   const cases = [
     validMeta({ description: "x".repeat(281) }),
     validMeta({ version: "1.0" }),
-    validMeta({ permissions: ["network", "contacts"] }),
+    validMeta({ permissions: ["network", "nfc"] }),
     validMeta({ author: "not a handle!" }),
     validMeta({ category: "other" }),
     validMeta({ unknownField: true }),
@@ -348,7 +348,12 @@ test("index build: contract fields, sorting, hidden handling", () => {
   assert.deepEqual(Object.keys(zeta), [
     "id", "name", "author", "version", "description", "permissions", "minAppVersion", "widgetSizes",
     "license", "category", "status", "sha256", "size", "scriptPath", "iconPath", "readmePath", "updatedAt",
+    "createdAt", "featured", "blurb", "stars", "installs", "starsURL", "homepage",
   ]);
+  assert.equal(zeta.featured, null);
+  assert.equal(zeta.stars, null);
+  assert.deepEqual(index.hero, []);
+  assert.deepEqual(index.editorsChoice, []);
   assert.equal(zeta.sha256, sha256(Buffer.from(CLEAN)));
   assert.equal(zeta.size, Buffer.byteLength(CLEAN));
   assert.equal(zeta.scriptPath, "scripts/zeta-script/script.js");
@@ -359,6 +364,33 @@ test("index build: contract fields, sorting, hidden handling", () => {
   assert.ok(existsSync(path.join(out, "scripts", "zeta-script", "script.js")));
   assert.ok(!existsSync(path.join(out, "scripts", "alpha-script")), "hidden scripts are not published");
   assert.deepEqual(JSON.parse(readFileSync(path.join(out, "index.json"), "utf8")), index);
+});
+
+test("index build: featured.json and stats.json feed the front page", () => {
+  const root = makeRepo({
+    "zeta-script": goodFiles({ "meta.json": JSON.stringify(validMeta({ id: "zeta-script" })) }),
+    "alpha-script": goodFiles({ "meta.json": JSON.stringify(validMeta({ id: "alpha-script" })) }),
+  });
+  writeFileSync(path.join(root, "featured.json"), JSON.stringify({ hero: ["zeta-script"], editorsChoice: ["alpha-script", "zeta-script"], blurbs: { "zeta-script": "The one to try first." } }));
+  writeFileSync(path.join(root, "stats.json"), JSON.stringify({ "alpha-script": { stars: 7, starsURL: "https://github.com/o/r/issues/3" }, "zeta-script": { stars: "many" } }));
+  const { index, failures } = buildIndex({ root, out: path.join(root, "_site") });
+  assert.deepEqual(failures, []);
+  const [alpha, zeta] = index.scripts;
+  assert.deepEqual(index.hero, ["zeta-script"]);
+  assert.deepEqual(index.editorsChoice, ["alpha-script", "zeta-script"]);
+  assert.equal(zeta.featured, "hero");
+  assert.equal(zeta.blurb, "The one to try first.");
+  assert.equal(zeta.stars, null, "a non-numeric star count is ignored");
+  assert.equal(alpha.featured, "editorsChoice");
+  assert.equal(alpha.stars, 7);
+  assert.equal(alpha.starsURL, "https://github.com/o/r/issues/3");
+});
+
+test("index build refuses a featured id that has no script", () => {
+  const root = makeRepo({ "my-script": goodFiles() });
+  writeFileSync(path.join(root, "featured.json"), JSON.stringify({ hero: ["ghost-script"] }));
+  const { failures } = buildIndex({ root, out: path.join(root, "_site") });
+  assert.ok(failures.some((f) => f.includes("ghost-script")));
 });
 
 test("index build refuses to publish a public script with a hard finding", () => {
