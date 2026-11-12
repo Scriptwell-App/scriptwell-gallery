@@ -1,0 +1,21 @@
+{
+  "name": "scriptwell-gallery-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Validation, static analysis and index build for the Scriptwell gallery.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/analyzer.test.mjs",
+    "analyze": "node analyze.mjs",
+    "validate": "node review-pr.mjs --root .. --all --out ../.review",
+    "index": "node build-index.mjs --root .. --out ../_site"
+  },
+  "devDependencies": {
+    "acorn": "^8.12.0",
+    "ajv": "^8.17.0",
+    "ajv-formats": "^3.0.0"
+  }
+}

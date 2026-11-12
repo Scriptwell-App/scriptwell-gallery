@@ -1,0 +1,46 @@
+name: Test tools
+
+# Maintainer changes to the checks themselves. Uses plain `pull_request`
+# (read-only token), because this one does run code from the pull request.
+
+on:
+  pull_request:
+    paths:
+      - "tools/**"
+      - "schema/**"
+      - ".github/workflows/tools-test.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: npm test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install tool dependencies
+        working-directory: tools
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --ignore-scripts --no-audit --no-fund
+          else
+            npm install --ignore-scripts --no-audit --no-fund
+          fi
+
+      - name: Test
+        working-directory: tools
+        run: npm test
+
+      - name: Dry-run index build
+        run: node tools/build-index.mjs --root . --out _site

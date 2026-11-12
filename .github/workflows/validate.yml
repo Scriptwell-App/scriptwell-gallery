@@ -1,0 +1,153 @@
+name: Validate submission
+
+# Why pull_request_target, and why it is safe here
+# ------------------------------------------------
+# Submissions come from forks. A plain `pull_request` run from a fork gets a
+# read-only token, so it could not post the summary comment or apply labels.
+# `pull_request_target` runs in the context of the BASE repository with a
+# token that can.
+#
+# The well-known danger of pull_request_target is executing code from the
+# pull request with that token. This workflow never does:
+#
+#   * The tools that run come from the base branch (checked out into base/).
+#     `npm` installs dependencies only in base/tools, with --ignore-scripts.
+#   * The pull request is checked out into pr/ and is only ever READ as data
+#     by base/tools/review-pr.mjs. Nothing in pr/ is executed, installed,
+#     sourced or imported. The tools refuse symlinks and oversized files.
+#   * Both checkouts use persist-credentials: false, so no token is left on
+#     disk next to untrusted files.
+#   * The token is limited to the three permissions below. There are no other
+#     secrets in this workflow.
+#   * Values from the pull request reach shell steps only through `env:`,
+#     never by `${{ }}` interpolation inside a script.
+#
+# Keep it that way: do not add a step that runs anything from pr/.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: validate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Gallery checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out base branch (trusted tools)
+        uses: actions/checkout@v4
+        with:
+          path: base
+          persist-credentials: false
+
+      - name: Check out pull request (untrusted data)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install tool dependencies (base only)
+        working-directory: base/tools
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --ignore-scripts --no-audit --no-fund
+          else
+            npm install --ignore-scripts --no-audit --no-fund
+          fi
+
+      - name: List changed files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              per_page: 100,
+            });
+            const paths = new Set();
+            for (const file of files) {
+              paths.add(file.filename);
+              if (file.previous_filename) paths.add(file.previous_filename);
+            }
+            require('fs').writeFileSync('changed.json', JSON.stringify([...paths]));
+
+      - name: Run checks
+        id: checks
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+        run: |
+          set +e
+          node base/tools/review-pr.mjs \
+            --root pr \
+            --base-root base \
+            --changed changed.json \
+            --pr-author "$PR_AUTHOR" \
+            --author-association "$AUTHOR_ASSOCIATION" \
+            --out review
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Comment and label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- scriptwell-gallery-review -->';
+            const issue = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            };
+
+            let body = marker + '\n## Gallery checks: could not run\n\nThe review tool did not produce a report. See the workflow log.';
+            let labels = ['needs-changes'];
+            if (fs.existsSync('review/review.md') && fs.existsSync('review/review.json')) {
+              body = fs.readFileSync('review/review.md', 'utf8');
+              labels = JSON.parse(fs.readFileSync('review/review.json', 'utf8')).labels;
+            }
+
+            // One sticky comment: update it if it exists.
+            const comments = await github.paginate(github.rest.issues.listComments, { ...issue, per_page: 100 });
+            const existing = comments.find((c) => c.user && c.user.type === 'Bot' && c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner: issue.owner, repo: issue.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...issue, body });
+            }
+
+            // Exactly the labels from this run; drop stale ones from earlier runs.
+            const managed = ['needs-changes', 'needs-careful-review', 'checks-passed'];
+            const current = await github.paginate(github.rest.issues.listLabelsOnIssue, { ...issue, per_page: 100 });
+            for (const label of current) {
+              if (managed.includes(label.name) && !labels.includes(label.name)) {
+                try {
+                  await github.rest.issues.removeLabel({ ...issue, name: label.name });
+                } catch (error) {
+                  core.info(`Could not remove label ${label.name}: ${error.message}`);
+                }
+              }
+            }
+            await github.rest.issues.addLabels({ ...issue, labels: labels.filter((name) => managed.includes(name)) });
+
+      - name: Fail on blocking findings
+        if: steps.checks.outputs.exit != '0'
+        run: |
+          echo "Blocking findings. See the summary comment on the pull request."
+          exit 1

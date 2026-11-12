@@ -1,0 +1,47 @@
+name: Report a script
+description: Report a gallery script that is harmful, misleading, objectionable or broken.
+title: "Report: "
+labels: ["report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. A maintainer reviews every report. A script that breaks the
+        [guidelines](https://github.com/OWNER/REPO/blob/main/GUIDELINES.md) is hidden from the gallery.
+        Issues here are public. To report privately, email gallery@scriptwell.example instead.
+  - type: input
+    id: script-id
+    attributes:
+      label: Script id
+      description: Shown on the script's page in the app. The app fills this in for you.
+      placeholder: hello-widget
+    validations:
+      required: true
+  - type: dropdown
+    id: reason
+    attributes:
+      label: Reason
+      options:
+        - Does something its description and permissions do not say
+        - Collects or sends personal data
+        - Offensive or objectionable content
+        - Spam or misleading
+        - Copyright or license problem
+        - Broken or does not work
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: What did you see? Do not include personal information.
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: Scriptwell version
+      description: Optional. Settings shows it at the bottom.
+    validations:
+      required: false

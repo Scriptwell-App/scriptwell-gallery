@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scriptwell.example/schema/meta.schema.json",
+  "title": "Scriptwell gallery script metadata",
+  "description": "One meta.json per script folder: scripts/<id>/meta.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "author",
+    "version",
+    "description",
+    "permissions",
+    "minAppVersion",
+    "widgetSizes",
+    "license",
+    "category"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional, for editor autocompletion only."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{2,49}$",
+      "description": "Stable identifier. Must equal the folder name. Never changes after publication."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50,
+      "description": "Display name shown in the gallery."
+    },
+    "author": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$",
+      "description": "GitHub handle of the author, without the @."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$",
+      "description": "Semantic version x.y.z. Bump it on every change to script.js."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 280,
+      "description": "What the script does, in plain language."
+    },
+    "permissions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": ["network", "location", "calendar", "reminders", "notifications", "clipboard"]
+      },
+      "description": "Must match the // @permissions line in script.js exactly. Use [] for none."
+    },
+    "minAppVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
+      "description": "Lowest Scriptwell version the script runs on."
+    },
+    "widgetSizes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": ["small", "medium", "large", "extraLarge", "circular", "rectangular", "inline"]
+      },
+      "description": "Widget families the script supports. Use [] if it has no widget."
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "default": "MIT",
+      "description": "SPDX identifier of the script's license."
+    },
+    "category": {
+      "enum": ["weather", "productivity", "news", "health", "finance", "fun", "utilities", "developer"]
+    },
+    "status": {
+      "enum": ["public", "hidden"],
+      "default": "public",
+      "description": "Maintainers set this to \"hidden\" to take a script down without an app update."
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://",
+      "maxLength": 200,
+      "description": "Optional HTTPS link for more information."
+    }
+  }
+}
