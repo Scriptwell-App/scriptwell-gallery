@@ -1,0 +1,15 @@
+{
+  "id": "chore-chart",
+  "name": "Chore Chart",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Tick off chores each day and collect stars through the week",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium"
+  ],
+  "license": "MIT",
+  "category": "kids"
+}

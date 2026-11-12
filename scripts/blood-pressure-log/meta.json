@@ -1,0 +1,15 @@
+{
+  "id": "blood-pressure-log",
+  "name": "Blood Pressure Log",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Record readings, see your weekly average and share the log with your doctor",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium"
+  ],
+  "license": "MIT",
+  "category": "medical"
+}

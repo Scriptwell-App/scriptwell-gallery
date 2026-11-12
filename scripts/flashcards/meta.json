@@ -1,0 +1,14 @@
+{
+  "id": "flashcards",
+  "name": "Flashcards",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Learn anything with spaced repetition; a widget shows what is due",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small"
+  ],
+  "license": "MIT",
+  "category": "education"
+}

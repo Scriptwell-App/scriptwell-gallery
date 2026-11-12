@@ -52,7 +52,7 @@ outside it.
 | `minAppVersion` | Lowest Scriptwell version it runs on, such as `1.0`. |
 | `widgetSizes` | Any of `small`, `medium`, `large`, `extraLarge`, `circular`, `rectangular`, `inline`. `[]` if there is no widget. |
 | `license` | SPDX id. Default `MIT`. |
-| `category` | One of `weather`, `productivity`, `news`, `health`, `finance`, `fun`, `utilities`, `developer`. |
+| `category` | One of the App Store categories: `books`, `business`, `developer-tools`, `education`, `entertainment`, `finance`, `food-drink`, `games`, `graphics-design`, `health-fitness`, `kids`, `lifestyle`, `magazines-newspapers`, `medical`, `music`, `navigation`, `news`, `photo-video`, `productivity`, `reference`, `shopping`, `social-networking`, `sports`, `travel`, `utilities`, `weather`. |
 | `homepage` | Optional `https://` link. |
 
 Do not set `status`; maintainers use it to hide scripts.

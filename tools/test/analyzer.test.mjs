@@ -15,8 +15,10 @@ import { classifyPaths, review, reviewScript, COMMENT_MARKER } from "../review-p
 import { buildIndex } from "../build-index.mjs";
 import { core, rules, sha256 } from "../lib/common.mjs";
 
-const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const SAMPLE = path.join(REPO, "scripts", "hello-widget");
+// The tests use their own copy of a sample script, so removing or changing the
+// scripts published in `scripts/` can never break the publish workflow.
+const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures");
+const SAMPLE = path.join(FIXTURES, "scripts", "hello-widget");
 
 const ruleIds = (result) => result.findings.map((f) => f.ruleId);
 const hardIds = (result) => result.findings.filter((f) => f.severity === "hard").map((f) => f.ruleId);
@@ -257,7 +259,7 @@ test("changed paths are grouped by script folder", () => {
 });
 
 test("the sample script passes a full review", () => {
-  const result = reviewScript({ root: REPO, id: "hello-widget" });
+  const result = reviewScript({ root: FIXTURES, id: "hello-widget" });
   assert.deepEqual(result.findings, []);
   assert.equal(result.sha256, sha256(readFileSync(path.join(SAMPLE, "script.js"))));
 });

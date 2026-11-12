@@ -1,0 +1,14 @@
+{
+  "id": "interval-timer",
+  "name": "Interval Timer",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Work and rest rounds for workouts, with an alert at every change",
+  "permissions": [
+    "notifications"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "health-fitness"
+}

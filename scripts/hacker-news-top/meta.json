@@ -1,0 +1,17 @@
+{
+  "id": "hacker-news-top",
+  "name": "Hacker News Top",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "The top stories on Hacker News, on your Home Screen and in a reader list",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "magazines-newspapers"
+}

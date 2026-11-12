@@ -1,0 +1,12 @@
+{
+  "id": "tip-and-split",
+  "name": "Tip & Split",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Work out the tip and what each person owes, with optional rounding up",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "utilities"
+}

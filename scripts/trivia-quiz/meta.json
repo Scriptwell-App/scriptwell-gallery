@@ -1,0 +1,14 @@
+{
+  "id": "trivia-quiz",
+  "name": "Trivia Quiz",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Ten multiple-choice questions at a time, with your score",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "entertainment"
+}

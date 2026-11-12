@@ -1,0 +1,12 @@
+{
+  "id": "tic-tac-toe",
+  "name": "Tic-Tac-Toe",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Noughts and crosses against the computer, with a running score",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "games"
+}

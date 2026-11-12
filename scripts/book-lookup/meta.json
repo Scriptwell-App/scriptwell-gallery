@@ -1,0 +1,14 @@
+{
+  "id": "book-lookup",
+  "name": "Book Lookup",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Find a book by title, author or ISBN with Open Library",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "books"
+}

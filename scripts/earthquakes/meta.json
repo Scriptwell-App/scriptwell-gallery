@@ -1,0 +1,18 @@
+{
+  "id": "earthquakes",
+  "name": "Earthquakes",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Significant earthquakes around the world in the last 24 hours, from the USGS",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "news"
+}

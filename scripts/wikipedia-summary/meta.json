@@ -1,0 +1,14 @@
+{
+  "id": "wikipedia-summary",
+  "name": "Wikipedia Summary",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Look anything up and get the first paragraph from Wikipedia, in the app or by voice",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "reference"
+}

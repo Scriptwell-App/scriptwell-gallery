@@ -1,0 +1,17 @@
+{
+  "id": "repo-stats",
+  "name": "Repo Stats",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Stars, forks and open issues for any GitHub repository",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium"
+  ],
+  "license": "MIT",
+  "category": "developer-tools"
+}

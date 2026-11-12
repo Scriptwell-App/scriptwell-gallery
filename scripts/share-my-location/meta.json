@@ -1,0 +1,14 @@
+{
+  "id": "share-my-location",
+  "name": "Share My Location",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Turn where you are into a Maps link you can send to anyone",
+  "permissions": [
+    "location"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "navigation"
+}

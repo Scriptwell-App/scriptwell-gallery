@@ -1,8 +1,11 @@
-// @name Hello Widget
-// @description A minimal widget: a greeting and the time it last refreshed.
-// @widget small, medium
-// @icon hand.wave
-// @color #4F46E5
+// @name        Hello Widget
+// @description A minimal widget to start from: a greeting and the time it last refreshed
+// @widget      small, medium
+// @icon        hand.wave.fill
+// @color       #4F46E5
+// @version     1.0.1
+// @author      va4w
+// @category    utilities
 
 // The smallest useful Scriptwell widget. It needs no permissions.
 // Script.widget registers a function that returns a plain object tree;

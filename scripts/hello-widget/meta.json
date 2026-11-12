@@ -1,12 +1,15 @@
 {
   "id": "hello-widget",
   "name": "Hello Widget",
-  "author": "scriptwell",
-  "version": "1.0.0",
-  "description": "A minimal widget: a greeting and the time it last refreshed. A good starting point for your own.",
+  "author": "va4w",
+  "version": "1.0.1",
+  "description": "A minimal widget to start from: a greeting and the time it last refreshed",
   "permissions": [],
   "minAppVersion": "1.0",
-  "widgetSizes": ["small", "medium"],
+  "widgetSizes": [
+    "small",
+    "medium"
+  ],
   "license": "MIT",
   "category": "utilities"
 }

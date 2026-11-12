@@ -1,0 +1,12 @@
+{
+  "id": "unit-converter",
+  "name": "Unit Converter",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Convert length, weight, temperature, volume and speed, in the app or from Shortcuts",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "reference"
+}

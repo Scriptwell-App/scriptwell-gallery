@@ -1,0 +1,16 @@
+{
+  "id": "shopping-list",
+  "name": "Shopping List",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "A shopping list that remembers what you usually buy, with a tick-off widget",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "shopping"
+}

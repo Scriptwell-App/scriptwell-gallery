@@ -19,7 +19,7 @@ app <── index.json + script files on GitHub Pages <── publish.yml <─�
 
 | Path | What it is |
 |---|---|
-| `scripts/<id>/` | One folder per script: `script.js`, `meta.json`, `icon.png`, optional `README.md` |
+| `scripts/<id>/` | One folder per script: `script.js`, `meta.json`, `icon.png`, optional `README.md`. Starts with 60 scripts, at least two in each of the 26 App Store categories |
 | `schema/meta.schema.json` | JSON Schema for `meta.json` |
 | `tools/analyzer/` | `analyzer-core.js` and `rules.json`: the same two files the app runs on imported scripts |
 | `tools/*.mjs` | CI entry points: `review-pr`, `analyze`, `validate-meta`, `check-icon`, `build-index` |
@@ -72,6 +72,9 @@ names are a contract with the app: add fields if you need to, never rename.
 3. **Commit a lockfile:** run `npm install` once in `tools/` and commit
    `tools/package-lock.json`. The workflows use `npm ci` when it exists.
 4. **Enable Pages:** Settings → Pages → Source: **GitHub Actions**.
+   It must be **GitHub Actions**, not "Deploy from a branch". With the branch
+   option GitHub publishes the README as a website instead, and `index.json`
+   returns 404 even though the publish workflow reports success.
 5. **Protect `main`:** require a pull request, require review from Code
    Owners, require the status check **Gallery checks**, and disallow bypass.
 6. **Actions settings:** Settings → Actions → General → require approval for

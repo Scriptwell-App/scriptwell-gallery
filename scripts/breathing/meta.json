@@ -1,0 +1,12 @@
+{
+  "id": "breathing",
+  "name": "Breathing",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Box breathing guided by taps you can feel, one calm minute at a time",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "health-fitness"
+}

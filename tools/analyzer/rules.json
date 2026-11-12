@@ -41,7 +41,8 @@
     { "global": "Calendar", "permission": "calendar" },
     { "global": "Reminders", "permission": "reminders" },
     { "global": "Notification", "permission": "notifications" },
-    { "global": "Clipboard", "permission": "clipboard" }
+    { "global": "Clipboard", "permission": "clipboard" },
+    { "property": "src", "permission": "network" }
   ],
 
   "widgetFamilies": ["small", "medium", "large", "extraLarge", "circular", "rectangular", "inline"],

@@ -1,0 +1,17 @@
+{
+  "id": "on-this-day",
+  "name": "On This Day",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Something that happened on today's date in history, from Wikipedia",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "news"
+}

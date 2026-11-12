@@ -1,0 +1,19 @@
+{
+  "id": "next-f1-race",
+  "name": "Next F1 Race",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Countdown to the next Formula 1 Grand Prix, with qualifying and sprint times in your time zone",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "rectangular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "sports"
+}

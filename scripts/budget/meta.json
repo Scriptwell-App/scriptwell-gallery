@@ -1,0 +1,15 @@
+{
+  "id": "budget",
+  "name": "Budget",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Log spending against a monthly budget and see what is left",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium"
+  ],
+  "license": "MIT",
+  "category": "finance"
+}

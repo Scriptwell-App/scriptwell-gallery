@@ -1,0 +1,12 @@
+{
+  "id": "times-tables",
+  "name": "Times Tables",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "A quick multiplication quiz with stars for every correct answer",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "kids"
+}

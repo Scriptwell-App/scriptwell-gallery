@@ -1,0 +1,15 @@
+{
+  "id": "reading-tracker",
+  "name": "Reading Tracker",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Log pages toward a daily reading goal and keep a streak going",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium"
+  ],
+  "license": "MIT",
+  "category": "books"
+}
