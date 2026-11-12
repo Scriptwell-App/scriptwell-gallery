@@ -1,4 +1,4 @@
-// @name        Unlsoth
+// @name        Unsloth
 // @description A pixel-art sloth that only wakes up when you move. Steps from Apple Health unsloth it and earn leaves to feed it.
 // @icon        leaf.fill
 // @color       #6B8E4E
