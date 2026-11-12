@@ -20,10 +20,13 @@ app <── index.json + script files on GitHub Pages <── publish.yml <─�
 | Path | What it is |
 |---|---|
 | `scripts/<id>/` | One folder per script: `script.js`, `meta.json`, `icon.png`, optional `README.md`. Starts with one script, Repo Stats; new ones arrive by pull request |
+| `featured.json` | The front page: `hero` (the banner), `editorsChoice` and one-line `blurbs`, all by script id |
+| `stats.json` | Stars per script, written daily by the `stars.yml` workflow; never edit by hand |
 | `schema/meta.schema.json` | JSON Schema for `meta.json` |
 | `tools/analyzer/` | `analyzer-core.js` and `rules.json`: the same two files the app runs on imported scripts |
 | `tools/*.mjs` | CI entry points: `review-pr`, `analyze`, `validate-meta`, `check-icon`, `build-index` |
 | `.github/workflows/validate.yml` | Runs on every pull request; comments, labels, fails on blocking findings |
+| `.github/workflows/stars.yml` | Counts 👍 reactions on the "Star: <id>" issues into `stats.json` once a day |
 | `.github/workflows/publish.yml` | Runs on merge to `main`; rebuilds `index.json` and deploys to Pages |
 
 ### What the app reads
@@ -53,15 +56,36 @@ it are relative to `index.json`.
       "scriptPath": "scripts/repo-stats/script.js",
       "iconPath": "scripts/repo-stats/icon.png",
       "readmePath": "scripts/repo-stats/README.md",
-      "updatedAt": "2026-01-01T12:00:00+00:00"
+      "updatedAt": "2026-01-01T12:00:00+00:00",
+      "createdAt": "2025-12-01T09:00:00+00:00",
+      "featured": "hero",
+      "blurb": "Stars, forks and open issues for any repository, right on your Home Screen.",
+      "stars": 12,
+      "installs": null,
+      "starsURL": "https://github.com/OWNER/REPO/issues/4",
+      "homepage": null
     }
-  ]
+  ],
+  "hero": ["repo-stats"],
+  "editorsChoice": []
 }
 ```
 
 On install the app downloads `script.js`, checks it against `sha256`, shows
 the permission list, and never runs the script automatically. These field
 names are a contract with the app: add fields if you need to, never rename.
+
+## The front page
+
+The app's Gallery tab shows shelves built from `index.json` alone:
+
+- **Featured** (the hero banner) and **Editors' Choice**: the ids in `featured.json`, in that order, with the `blurbs` as one-line notes. Edit the file in a pull request like any other change; the build fails if an id has no script.
+- **New**: scripts first published in the last 30 days (`createdAt`, the first commit of the script), newest first; the newest ten when nothing is that recent.
+- **Recently Updated**: scripts changed since they were first published (`updatedAt`).
+- **Most Starred**: scripts with stars. A star is a 👍 reaction on a GitHub issue titled `Star: <id>` that carries the `stars` label; open one issue per script and pin it if you like. `stars.yml` counts the reactions every night into `stats.json`, and the next publish puts them in `index.json`. Install counts (`installs`) are reserved: nothing measures them, because the app sends no analytics and GitHub Pages keeps no download logs.
+- **Categories**: every category that has at least one public script, with counts.
+
+Search in the app ranks matches by name, then id and author, then category, permissions and description, and needs every word to match; results can be narrowed by permission and "has a widget", and sorted by name, newest, recently updated or most starred.
 
 ## Maintainer quick start
 
