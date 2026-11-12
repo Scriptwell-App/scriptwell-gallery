@@ -1,0 +1,20 @@
+{
+  "author" : "scriptwell",
+  "category" : "utilities",
+  "description" : "Reads radon, CO₂, VOC, humidity, temperature and pressure from an Airthings Wave Plus over Bluetooth, keeps a history and shows it with sparklines",
+  "id" : "airthings-wave-plus",
+  "license" : "MIT",
+  "minAppVersion" : "1.0",
+  "name" : "Airthings Wave Plus",
+  "permissions" : [
+    "bluetooth"
+  ],
+  "version" : "1.0.0",
+  "widgetSizes" : [
+    "small",
+    "medium",
+    "large",
+    "rectangular",
+    "inline"
+  ]
+}
