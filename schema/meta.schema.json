@@ -53,7 +53,7 @@
       "type": "array",
       "uniqueItems": true,
       "items": {
-        "enum": ["network", "location", "calendar", "reminders", "notifications", "clipboard", "camera", "microphone", "contacts", "health", "cloudai", "bluetooth", "motion"]
+        "enum": ["network", "location", "calendar", "reminders", "notifications", "clipboard", "camera", "microphone", "contacts", "health", "cloudai", "bluetooth", "motion", "ar"]
       },
       "description": "Must match the // @permissions line in script.js exactly. Use [] for none."
     },

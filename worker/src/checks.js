@@ -29,7 +29,7 @@ export const META = {
   authorPattern: /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/,
   versionPattern: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/,
   minAppVersionPattern: /^\d+\.\d+(\.\d+)?$/,
-  permissions: ["network", "location", "calendar", "reminders", "notifications", "clipboard", "camera", "microphone", "contacts", "health", "cloudai", "bluetooth", "motion"],
+  permissions: ["network", "location", "calendar", "reminders", "notifications", "clipboard", "camera", "microphone", "contacts", "health", "cloudai", "bluetooth", "motion", "ar"],
   widgetSizes: ["small", "medium", "large", "extraLarge", "circular", "rectangular", "inline"],
   categories: ["books", "business", "developer-tools", "education", "entertainment", "finance", "food-drink", "games", "graphics-design", "health-fitness", "kids", "lifestyle", "magazines-newspapers", "medical", "music", "navigation", "news", "photo-video", "productivity", "reference", "shopping", "social-networking", "sports", "travel", "utilities", "weather"],
 };

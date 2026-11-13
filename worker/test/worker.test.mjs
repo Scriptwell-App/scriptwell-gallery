@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createPrivateKey, createPublicKey, generateKeyPairSync, verify as nodeVerify } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 import { validateSubmission, checkMeta } from "../src/checks.js";
 import { pkcs1ToPkcs8, importPrivateKey, signJWT } from "../src/jwt.js";
 import { pemToDer, base64Encode, sha256Hex } from "../src/util.js";
@@ -57,6 +59,27 @@ function fakeKV(initial = {}) {
       return options && options.type === "json" ? JSON.parse(value) : value;
     },
     async put(key, value) { store.set(key, value); },
+  };
+}
+
+/** D1 on Node's built-in SQLite, with the real migration, so the Worker's SQL runs as written. */
+function fakeD1() {
+  const db = new DatabaseSync(":memory:");
+  db.exec(readFileSync(new URL("../migrations/0001_stars.sql", import.meta.url), "utf8"));
+  const statement = (sql, args = []) => ({
+    sql,
+    bind: (...values) => statement(sql, values),
+    async all() { return { results: db.prepare(sql).all(...args) }; },
+    async run() { db.prepare(sql).run(...args); return { success: true }; },
+  });
+  return {
+    db,
+    prepare: (sql) => statement(sql),
+    async batch(statements) {
+      const out = [];
+      for (const s of statements) out.push(await s.all());
+      return out;
+    },
   };
 }
 
@@ -348,4 +371,65 @@ test("POST /v1/submit: missing device token is 401; bad JSON is 400; rate limit 
   assert.equal((await worker.fetch(post(goodPayload()), env(net, limited), ctx)).status, 429);
   assert.equal((await worker.fetch(new Request("https://submit.example/v1/health"), e, ctx)).status, 200);
   assert.equal((await worker.fetch(new Request("https://submit.example/nope"), e, ctx)).status, 404);
+});
+
+// ---------- stars ----------
+
+const VOTER = "v".repeat(43);
+
+function starRequest(body, ip = "203.0.113.9") {
+  return new Request("https://submit.example/v1/star", {
+    method: "POST",
+    headers: { "content-type": "application/json", "cf-connecting-ip": ip },
+    body: typeof body === "string" ? body : JSON.stringify(body),
+  });
+}
+
+async function starsEnv(overrides = {}) {
+  const network = fakeNetwork({ indexIds: ["repo-stats", "weather-now"] });
+  const d1 = fakeD1();
+  return { network, d1, e: env(network, fakeKV(), { STARS: d1, ...overrides }) };
+}
+
+test("POST /v1/star: one star per install, idempotent, and it can be taken back", async () => {
+  const { e, d1, network } = await starsEnv();
+  const tap = (starred, voterToken = VOTER) => worker.fetch(starRequest({ id: "repo-stats", starred, voterToken, deviceToken: "d".repeat(40) }), e, ctx).then((r) => r.json());
+  assert.deepEqual(await tap(true), { id: "repo-stats", starred: true, stars: 1 });
+  assert.deepEqual(await tap(true), { id: "repo-stats", starred: true, stars: 1 });
+  assert.deepEqual(await tap(true, "w".repeat(43)), { id: "repo-stats", starred: true, stars: 2 });
+  assert.deepEqual(await tap(false), { id: "repo-stats", starred: false, stars: 1 });
+  // Only hashes are stored, never the token itself.
+  const voters = d1.db.prepare("SELECT voter FROM stars").all().map((row) => row.voter);
+  assert.deepEqual(voters, [await sha256Hex("w".repeat(43) + ":repo-stats")]);
+  assert.ok(network.calls.some((c) => c.path === "/v1/validate_device_token"), "DeviceCheck is asked");
+});
+
+test("POST /v1/star: unknown scripts, bad tokens, missing device token and the daily limit", async () => {
+  const { e } = await starsEnv({ STAR_IP_DAILY_LIMIT: "2" });
+  const send = (body, ip) => worker.fetch(starRequest(body, ip), e, ctx);
+  const good = { id: "repo-stats", starred: true, voterToken: VOTER, deviceToken: "d".repeat(40) };
+  assert.equal((await send({ ...good, id: "not-there" }, "198.51.100.1")).status, 404);
+  assert.equal((await send({ ...good, voterToken: "short" }, "198.51.100.2")).status, 400);
+  assert.equal((await send({ ...good, starred: "yes" }, "198.51.100.2")).status, 400);
+  assert.equal((await send({ ...good, deviceToken: undefined }, "198.51.100.3")).status, 401);
+  assert.equal((await send(good, "198.51.100.4")).status, 200);
+  assert.equal((await send(good, "198.51.100.4")).status, 200);
+  const limited = await send(good, "198.51.100.4");
+  assert.equal(limited.status, 429);
+  assert.equal((await limited.json()).code, "rate-limited");
+});
+
+test("GET /v1/stars: live counts plus the carried-over baseline, in stats.json form", async () => {
+  const { e, d1 } = await starsEnv();
+  d1.db.exec("INSERT INTO star_baseline (script_id, stars) VALUES ('repo-stats', 5), ('weather-now', 2)");
+  await worker.fetch(starRequest({ id: "repo-stats", starred: true, voterToken: VOTER, deviceToken: "d".repeat(40) }), e, ctx);
+  const response = await worker.fetch(new Request("https://submit.example/v1/stars"), e, ctx);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { "repo-stats": { stars: 6 }, "weather-now": { stars: 2 } });
+});
+
+test("stars without a D1 binding answer 503", async () => {
+  const network = fakeNetwork();
+  const response = await worker.fetch(new Request("https://submit.example/v1/stars"), env(network, fakeKV()), ctx);
+  assert.equal(response.status, 503);
 });

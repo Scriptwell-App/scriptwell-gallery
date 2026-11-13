@@ -1,7 +1,6 @@
 {
   "$comment": "Scriptwell static-analysis rules. ONE file, used by the GitHub Actions analyzer (Node) and by the in-app import check (JavaScriptCore). Edit here, then run scripts/sync-analyzer.sh to copy into gallery-template/.",
   "version": 1,
-
   "permissions": {
     "network": {
       "title": "Network",
@@ -67,117 +66,253 @@
       "title": "Motion",
       "summary": "Read the compass, motion sensors, steps and altitude.",
       "detail": "The script can read the compass heading, the accelerometer and gyroscope, your step count and floors climbed, and barometric pressure and altitude while it runs. iOS will also ask you separately about steps and altitude (Motion & Fitness)."
+    },
+    "ar": {
+      "title": "Augmented Reality",
+      "summary": "Show objects in your surroundings through the camera.",
+      "detail": "The script can show a live camera view with objects placed in your surroundings while its screen is open, read where they and you are in the room, and take a picture of that view. iOS will also ask you separately about the camera."
     }
   },
-
   "apis": [
-    { "global": "fetch", "permission": "network" },
-    { "global": "Location", "permission": "location", "except": ["geocode", "reverseGeocode", "search", "distance"] },
-    { "global": "Calendar", "permission": "calendar" },
-    { "global": "Reminders", "permission": "reminders" },
-    { "global": "Notification", "permission": "notifications" },
-    { "global": "Clipboard", "permission": "clipboard" },
-    { "global": "Camera", "permission": "camera" },
-    { "member": "Widget.scanner", "permission": "camera" },
-    { "member": "Speech.listen", "permission": "microphone" },
-    { "member": "Contacts.find", "permission": "contacts" },
-    { "global": "Health", "permission": "health" },
-    { "member": "AI.cloud", "permission": "cloudai" },
-    { "global": "Bluetooth", "permission": "bluetooth" },
-    { "global": "Compass", "permission": "motion" },
-    { "global": "Motion", "permission": "motion" },
-    { "global": "WebSocket", "permission": "network" },
-    { "property": "src", "permission": "network" }
+    {
+      "global": "fetch",
+      "permission": "network"
+    },
+    {
+      "global": "Location",
+      "permission": "location",
+      "except": [
+        "geocode",
+        "reverseGeocode",
+        "search",
+        "distance"
+      ]
+    },
+    {
+      "global": "Calendar",
+      "permission": "calendar"
+    },
+    {
+      "global": "Reminders",
+      "permission": "reminders"
+    },
+    {
+      "global": "Notification",
+      "permission": "notifications"
+    },
+    {
+      "global": "Clipboard",
+      "permission": "clipboard"
+    },
+    {
+      "global": "Camera",
+      "permission": "camera"
+    },
+    {
+      "member": "Widget.scanner",
+      "permission": "camera"
+    },
+    {
+      "member": "Speech.listen",
+      "permission": "microphone"
+    },
+    {
+      "member": "Contacts.find",
+      "permission": "contacts"
+    },
+    {
+      "global": "Health",
+      "permission": "health"
+    },
+    {
+      "member": "AI.cloud",
+      "permission": "cloudai"
+    },
+    {
+      "global": "Bluetooth",
+      "permission": "bluetooth"
+    },
+    {
+      "global": "Compass",
+      "permission": "motion"
+    },
+    {
+      "global": "Motion",
+      "permission": "motion"
+    },
+    {
+      "global": "WebSocket",
+      "permission": "network"
+    },
+    {
+      "property": "src",
+      "permission": "network"
+    },
+    {
+      "member": "Widget.ar",
+      "permission": "ar"
+    },
+    {
+      "global": "AR",
+      "permission": "ar",
+      "except": [
+        "available"
+      ]
+    }
   ],
-
-  "widgetFamilies": ["small", "medium", "large", "extraLarge", "circular", "rectangular", "inline"],
-
+  "widgetFamilies": [
+    "small",
+    "medium",
+    "large",
+    "extraLarge",
+    "circular",
+    "rectangular",
+    "inline"
+  ],
   "rules": [
     {
       "id": "no-eval",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": ["eval", "("],
-      "notAfter": [".", "?."],
+      "tokens": [
+        "eval",
+        "("
+      ],
+      "notAfter": [
+        ".",
+        "?."
+      ],
       "message": "eval() is not allowed. Scripts must not build code from strings."
     },
     {
       "id": "no-eval-reference",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": [",", "eval", ")"],
+      "tokens": [
+        ",",
+        "eval",
+        ")"
+      ],
       "message": "Indirect eval, such as (0, eval)(...), is not allowed."
     },
     {
       "id": "no-new-function",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": ["new", "Function"],
+      "tokens": [
+        "new",
+        "Function"
+      ],
       "message": "new Function(...) is not allowed. Scripts must not build code from strings."
     },
     {
       "id": "no-function-call",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": ["Function", "("],
-      "notAfter": [".", "?.", "function", "new"],
+      "tokens": [
+        "Function",
+        "("
+      ],
+      "notAfter": [
+        ".",
+        "?.",
+        "function",
+        "new"
+      ],
       "message": "Function(...) is not allowed. Scripts must not build code from strings."
     },
     {
       "id": "no-constructor-chain",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": ["constructor", ".", "constructor"],
+      "tokens": [
+        "constructor",
+        ".",
+        "constructor"
+      ],
       "message": "Reaching the Function constructor through .constructor.constructor is not allowed."
     },
     {
       "id": "no-constructor-string",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": ["[", { "str": "constructor" }, "]"],
+      "tokens": [
+        "[",
+        {
+          "str": "constructor"
+        },
+        "]"
+      ],
       "message": "Computed access to [\"constructor\"] is not allowed."
     },
     {
       "id": "no-dynamic-import",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": ["import", "("],
-      "notAfter": [".", "?."],
+      "tokens": [
+        "import",
+        "("
+      ],
+      "notAfter": [
+        ".",
+        "?."
+      ],
       "message": "Dynamic import() is not allowed. Scripts are single files."
     },
     {
       "id": "no-string-timers",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": ["setTimeout", "(", { "anyStr": true }],
+      "tokens": [
+        "setTimeout",
+        "(",
+        {
+          "anyStr": true
+        }
+      ],
       "message": "setTimeout with a string argument is not allowed. Pass a function."
     },
     {
       "id": "no-string-intervals",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": ["setInterval", "(", { "anyStr": true }],
+      "tokens": [
+        "setInterval",
+        "(",
+        {
+          "anyStr": true
+        }
+      ],
       "message": "setInterval with a string argument is not allowed. Pass a function."
     },
     {
       "id": "no-computed-global",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": ["globalThis", "["],
+      "tokens": [
+        "globalThis",
+        "["
+      ],
       "message": "Computed access on globalThis hides which APIs a script uses. Call APIs by name."
     },
     {
       "id": "no-computed-window",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": ["window", "["],
+      "tokens": [
+        "window",
+        "["
+      ],
       "message": "Computed access on window hides which APIs a script uses. Call APIs by name."
     },
     {
       "id": "no-computed-self",
       "severity": "hard",
       "kind": "sequence",
-      "tokens": ["self", "["],
+      "tokens": [
+        "self",
+        "["
+      ],
       "message": "Computed access on self hides which APIs a script uses. Call APIs by name."
     },
     {
@@ -191,42 +326,72 @@
       "id": "no-escaped-identifiers",
       "severity": "hard",
       "kind": "metric",
-      "when": [{ "metric": "escapedIdentifierCount", "gt": 0 }],
+      "when": [
+        {
+          "metric": "escapedIdentifierCount",
+          "gt": 0
+        }
+      ],
       "message": "Identifiers written with \\u escapes ({value} found) hide what the code calls."
     },
     {
       "id": "obfuscator-identifiers",
       "severity": "hard",
       "kind": "metric",
-      "when": [{ "metric": "hexIdentifierCount", "gt": 3 }],
+      "when": [
+        {
+          "metric": "hexIdentifierCount",
+          "gt": 3
+        }
+      ],
       "message": "{value} identifiers look machine-obfuscated (for example _0x1a2b). Submit readable source."
     },
     {
       "id": "source-too-large",
       "severity": "hard",
       "kind": "metric",
-      "when": [{ "metric": "sourceBytes", "gt": 200000 }],
+      "when": [
+        {
+          "metric": "sourceBytes",
+          "gt": 200000
+        }
+      ],
       "message": "The script is {value} bytes; the limit is 200000."
     },
     {
       "id": "huge-string-literal",
       "severity": "hard",
       "kind": "metric",
-      "when": [{ "metric": "maxStringLiteralLength", "gt": 20000 }],
+      "when": [
+        {
+          "metric": "maxStringLiteralLength",
+          "gt": 20000
+        }
+      ],
       "message": "A string literal is {value} characters long. Large embedded payloads are not allowed."
     },
     {
       "id": "long-string-literal",
       "severity": "soft",
       "kind": "metric",
-      "when": [{ "metric": "maxStringLiteralLength", "gt": 2000 }],
+      "when": [
+        {
+          "metric": "maxStringLiteralLength",
+          "gt": 2000
+        }
+      ],
       "message": "A string literal is {value} characters long. Reviewers will check what it contains."
     },
     {
       "id": "encoded-payload",
       "severity": "soft",
       "kind": "metric",
-      "when": [{ "metric": "longestBase64Literal", "gt": 400 }],
+      "when": [
+        {
+          "metric": "longestBase64Literal",
+          "gt": 400
+        }
+      ],
       "message": "A {value}-character literal looks like base64 or hex data. Reviewers will check what it contains."
     },
     {
@@ -234,8 +399,14 @@
       "severity": "hard",
       "kind": "metric",
       "when": [
-        { "metric": "escapeCount", "gt": 40 },
-        { "metric": "escapeRatio", "gt": 0.3 }
+        {
+          "metric": "escapeCount",
+          "gt": 40
+        },
+        {
+          "metric": "escapeRatio",
+          "gt": 0.3
+        }
       ],
       "message": "String literals are mostly hex/unicode escapes ({value} escapes). Submit readable source."
     },
@@ -243,14 +414,24 @@
       "id": "some-escapes",
       "severity": "soft",
       "kind": "metric",
-      "when": [{ "metric": "escapeCount", "gt": 40 }],
+      "when": [
+        {
+          "metric": "escapeCount",
+          "gt": 40
+        }
+      ],
       "message": "{value} hex/unicode escapes in string literals. Reviewers will check why."
     },
     {
       "id": "minified-line",
       "severity": "hard",
       "kind": "metric",
-      "when": [{ "metric": "maxCodeLineLength", "gt": 1000 }],
+      "when": [
+        {
+          "metric": "maxCodeLineLength",
+          "gt": 1000
+        }
+      ],
       "message": "A line of code is {value} characters long. Minified code is not allowed."
     },
     {
@@ -258,22 +439,76 @@
       "severity": "soft",
       "kind": "metric",
       "when": [
-        { "metric": "avgCodeLineLength", "gt": 160 },
-        { "metric": "sourceBytes", "gt": 1500 }
+        {
+          "metric": "avgCodeLineLength",
+          "gt": 160
+        },
+        {
+          "metric": "sourceBytes",
+          "gt": 1500
+        }
       ],
       "message": "Lines average {value} characters. The code may be minified."
     },
-    { "id": "undeclared-permission", "severity": "hard", "kind": "permissions" }
+    {
+      "id": "undeclared-permission",
+      "severity": "hard",
+      "kind": "permissions"
+    }
   ],
-
   "textFilter": {
     "$comment": "Applied to name and description. Case-insensitive whole-word match after simple leetspeak folding. Deliberately short; maintainers extend it in the gallery repo.",
     "words": [
-      "anal", "anus", "arse", "arsehole", "ass", "asshole", "bastard", "bitch", "blowjob", "bollocks",
-      "boner", "boob", "boobs", "bullshit", "clit", "cock", "crap", "cum", "cunt", "dick", "dildo",
-      "fag", "fuck", "fucked", "fucker", "fucking", "handjob", "hentai", "jizz", "milf",
-      "motherfucker", "nazi", "nude", "nudes", "piss", "porn", "porno", "pussy", "rape", "rapist",
-      "retard", "sex", "shit", "shitty", "slut", "tits", "twat", "wank", "whore", "xxx"
+      "anal",
+      "anus",
+      "arse",
+      "arsehole",
+      "ass",
+      "asshole",
+      "bastard",
+      "bitch",
+      "blowjob",
+      "bollocks",
+      "boner",
+      "boob",
+      "boobs",
+      "bullshit",
+      "clit",
+      "cock",
+      "crap",
+      "cum",
+      "cunt",
+      "dick",
+      "dildo",
+      "fag",
+      "fuck",
+      "fucked",
+      "fucker",
+      "fucking",
+      "handjob",
+      "hentai",
+      "jizz",
+      "milf",
+      "motherfucker",
+      "nazi",
+      "nude",
+      "nudes",
+      "piss",
+      "porn",
+      "porno",
+      "pussy",
+      "rape",
+      "rapist",
+      "retard",
+      "sex",
+      "shit",
+      "shitty",
+      "slut",
+      "tits",
+      "twat",
+      "wank",
+      "whore",
+      "xxx"
     ]
   }
 }
