@@ -1,0 +1,18 @@
+{
+  "id": "courage-in-100-languages",
+  "name": "Courage in 100 Languages",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Learn the word \"courage\" in 100 languages. ",
+  "permissions": [],
+  "minAppVersion": "1.1",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large",
+    "rectangular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "utilities"
+}
