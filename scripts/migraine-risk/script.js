@@ -4,6 +4,9 @@
 // @color       #7C3AED
 // @permissions location
 // @widget      small, medium, large, circular, rectangular, inline
+// @version     1.0.0
+// @author      va4w
+// @category    utilities
 
 // ───────────────────────── Settings and helpers
 

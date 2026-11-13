@@ -1,20 +1,20 @@
 {
-  "author" : "va4w",
-  "category" : "utilities",
-  "description" : "Reads radon, CO₂, VOC, humidity, temperature and pressure from an Airthings Wave Plus over Bluetooth, keeps a history and shows it with sparklines",
-  "id" : "airthings-wave-plus",
-  "license" : "MIT",
-  "minAppVersion" : "1.0",
-  "name" : "Airthings Wave Plus",
-  "permissions" : [
+  "id": "airthings-wave-plus",
+  "name": "Airthings Wave Plus",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Reads radon, CO₂, VOC, humidity, temperature and pressure from an Airthings Wave Plus over Bluetooth, keeps a history and shows it with sparklines",
+  "permissions": [
     "bluetooth"
   ],
-  "version" : "1.0.0",
-  "widgetSizes" : [
+  "minAppVersion": "1.0",
+  "widgetSizes": [
     "small",
     "medium",
     "large",
     "rectangular",
     "inline"
-  ]
+  ],
+  "license": "MIT",
+  "category": "utilities"
 }

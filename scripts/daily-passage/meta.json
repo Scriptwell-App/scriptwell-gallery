@@ -1,0 +1,18 @@
+{
+  "id": "daily-passage",
+  "name": "Daily Passage",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "One passage a day from a public-domain book of your choice, read aloud on request, with bookmarks and a book-like widget; searches gutendex.com and downloads the text from gutenberg.org",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "books"
+}

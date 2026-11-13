@@ -1,0 +1,21 @@
+{
+  "id": "ci-board",
+  "name": "CI Board",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "GitHub Actions status for the repositories you choose, with alerts when a workflow turns red; talks to api.github.com with a personal access token you enter once",
+  "permissions": [
+    "network",
+    "notifications"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large",
+    "rectangular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "developer-tools"
+}

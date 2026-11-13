@@ -1,0 +1,20 @@
+{
+  "id": "sun-shot-planner",
+  "name": "Sun Shot Planner",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Plans photographs around the sun: golden and blue hour, sunrise, sunset and solar noon for where you are or any searched place, a 24-hour elevation curve, an azimuth dial with your compass heading, and Apple Weather cloud cover for the day",
+  "permissions": [
+    "location",
+    "motion"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large",
+    "rectangular"
+  ],
+  "license": "MIT",
+  "category": "photo-video"
+}
