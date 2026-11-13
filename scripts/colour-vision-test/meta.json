@@ -1,0 +1,12 @@
+{
+  "id": "colour-vision-test",
+  "name": "Colour Vision Test",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "A quick colour vision screening with dot plates, in the style of Ishihara tests",
+  "permissions": [],
+  "minAppVersion": "1.1",
+  "widgetSizes": [],
+  "license": "MIT",
+  "category": "utilities"
+}
