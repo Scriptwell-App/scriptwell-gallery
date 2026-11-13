@@ -1,0 +1,18 @@
+{
+  "id": "beer-counter",
+  "name": "Beer Counter",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Count your beers, see an estimated blood alcohol level (‰) and reset the session",
+  "permissions": [],
+  "minAppVersion": "1.1",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "rectangular",
+    "circular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "utilities"
+}
