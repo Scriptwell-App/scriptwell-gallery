@@ -1,0 +1,17 @@
+{
+  "id": "pace-calculator",
+  "name": "Pace Calculator",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Running maths on the device: pace, time and distance for 5K to marathon, Riegel race predictions, even and negative split tables, treadmill conversions, and your recent runs from Apple Health",
+  "permissions": [
+    "health"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium"
+  ],
+  "license": "MIT",
+  "category": "sports"
+}

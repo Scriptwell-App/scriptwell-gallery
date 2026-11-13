@@ -4,6 +4,9 @@
 // @widget      small, medium, large, rectangular, inline
 // @icon        aqi.medium
 // @color       #0EA5E9
+// @version     1.0.0
+// @author      scriptwell
+// @category    utilities
 
 // How it works
 // • Bluetooth is not available inside a widget, so readings are taken when you tap "Read now"

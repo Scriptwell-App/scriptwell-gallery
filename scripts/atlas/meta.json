@@ -1,0 +1,18 @@
+{
+  "id": "atlas",
+  "name": "Atlas",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Country facts from restcountries.com with flags (flagcdn.com), maps, local time, exchange rates from api.frankfurter.app and Apple Weather for the capital; search, compare two countries, keep favourites, and a country of the day widget",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "reference"
+}

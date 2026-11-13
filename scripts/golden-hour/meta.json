@@ -1,0 +1,21 @@
+{
+  "id": "golden-hour",
+  "name": "Golden Hour",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Golden hour and blue hour for where you are: a live countdown, a light-quality strip for the day built from Apple Weather cloud and UV forecasts, sunrise, sunset and day length, in every widget size and a mini-app",
+  "permissions": [
+    "location"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large",
+    "circular",
+    "rectangular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "weather"
+}

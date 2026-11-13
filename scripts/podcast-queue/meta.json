@@ -1,0 +1,18 @@
+{
+  "id": "podcast-queue",
+  "name": "Podcast Queue",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Follow podcasts, see new episodes with artwork, build a listening queue with its total time, and let background runs fetch new episodes. Contacts itunes.apple.com and each show's own RSS feed.",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "entertainment"
+}

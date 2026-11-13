@@ -1,0 +1,19 @@
+{
+  "id": "newsstand",
+  "name": "Newsstand",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "A front-page reader for the RSS and Atom feeds you choose, with unread tracking, a read-later list and newspaper-style widgets. Contacts only the feed hosts you add (The Guardian, BBC, The New York Times and The Atlantic by default)",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large",
+    "extraLarge"
+  ],
+  "license": "MIT",
+  "category": "magazines-newspapers"
+}

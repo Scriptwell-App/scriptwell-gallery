@@ -1,0 +1,15 @@
+{
+  "id": "star-chart",
+  "name": "Star Chart",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "A chore chart for children: tick today's chores from the widget, collect stars towards a reward, and manage children, chores and rewards in a parent area behind a PIN. Nothing leaves the device.",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "kids"
+}

@@ -20,7 +20,7 @@ app <── index.json + script files on GitHub Pages <── publish.yml <─�
 
 | Path | What it is |
 |---|---|
-| `scripts/<id>/` | One folder per script: `script.js`, `meta.json`, `icon.png`, optional `README.md`. Starts with one script, Repo Stats; new ones arrive by pull request |
+| `scripts/<id>/` | One folder per script: `script.js`, `meta.json`, `icon.png`, optional `README.md`. Two or more per App Store category to start; new ones arrive by pull request |
 | `featured.json` | The front page: `hero` (the banner), `editorsChoice` and one-line `blurbs`, all by script id |
 | `stats.json` | Stars per script, written daily by the `stars.yml` workflow; never edit by hand |
 | `schema/meta.schema.json` | JSON Schema for `meta.json` |
