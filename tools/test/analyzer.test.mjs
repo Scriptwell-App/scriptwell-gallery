@@ -11,7 +11,8 @@ import { fileURLToPath } from "node:url";
 import { analyzeScript } from "../analyze.mjs";
 import { validateMeta } from "../validate-meta.mjs";
 import { checkIconBytes, readPngSize } from "../check-icon.mjs";
-import { classifyPaths, review, reviewScript, COMMENT_MARKER } from "../review-pr.mjs";
+import { checkScreenshotBytes, screenshotName } from "../lib/png.mjs";
+import { classifyPaths, review, reviewScript, screenshotURL, COMMENT_MARKER } from "../review-pr.mjs";
 import { buildIndex } from "../build-index.mjs";
 import { core, rules, sha256 } from "../lib/common.mjs";
 
@@ -60,7 +61,11 @@ function makeRepo(scripts) {
   for (const [id, files] of Object.entries(scripts)) {
     const dir = path.join(root, "scripts", id);
     mkdirSync(dir, { recursive: true });
-    for (const [name, content] of Object.entries(files)) writeFileSync(path.join(dir, name), content);
+    for (const [name, content] of Object.entries(files)) {
+      // "screenshots/small.png" style names create the sub-folder.
+      mkdirSync(path.dirname(path.join(dir, name)), { recursive: true });
+      writeFileSync(path.join(dir, name), content);
+    }
   }
   return root;
 }
@@ -197,6 +202,24 @@ test("icon checker enforces format, shape, size and weight", () => {
   assert.ok(checkIconBytes(pngHeader(512, 512, 300 * 1024)).some((f) => f.ruleId === "icon-too-large"));
 });
 
+test("screenshot checker: names, shape, size and weight", () => {
+  assert.equal(screenshotName("small.png"), "small");
+  assert.equal(screenshotName("app.png"), "app");
+  assert.equal(screenshotName("Small.png"), null);
+  assert.equal(screenshotName("small.jpg"), null);
+  assert.equal(screenshotName("../small.png"), null);
+
+  assert.deepEqual(checkScreenshotBytes("medium", pngHeader(676, 316)), []);
+  assert.deepEqual(checkScreenshotBytes("small", pngHeader(316, 316)), []);
+  assert.deepEqual(checkScreenshotBytes("app", pngHeader(780, 2400)), []);
+  assert.deepEqual(checkScreenshotBytes("small", pngHeader(676, 316)).map((f) => f.ruleId), ["screenshot-aspect"]);
+  assert.deepEqual(checkScreenshotBytes("medium", pngHeader(2000, 935)).map((f) => f.ruleId), ["screenshot-size"]);
+  assert.deepEqual(checkScreenshotBytes("app", pngHeader(780, 9000)).map((f) => f.ruleId), ["screenshot-size"]);
+  assert.deepEqual(checkScreenshotBytes("small", pngHeader(316, 316, 700 * 1024)).map((f) => f.ruleId), ["screenshot-too-large"]);
+  assert.deepEqual(checkScreenshotBytes("small", Buffer.from("not a png")).map((f) => f.ruleId), ["screenshot-not-png"]);
+  assert.deepEqual(checkScreenshotBytes("banner", pngHeader(316, 316)).map((f) => f.ruleId), ["screenshot-name"]);
+});
+
 test("the sample icon is valid", () => {
   assert.deepEqual(checkIconBytes(readFileSync(path.join(SAMPLE, "icon.png"))), []);
 });
@@ -244,6 +267,8 @@ test("meta.json: invalid JSON, id mismatch, objectionable text, permission misma
 // ------------------------------------------------------------------ review
 
 test("changed paths are grouped by script folder", () => {
+  assert.deepEqual(classifyPaths(["scripts/pic-script/screenshots/small.png", "scripts/pic-script/screenshots/odd.txt"]), { ids: ["pic-script"], outside: [] });
+  assert.deepEqual(classifyPaths(["scripts/pic-script/other/small.png"]).outside, ["scripts/pic-script/other/small.png"]);
   const { ids, outside } = classifyPaths([
     "scripts/my-script/script.js",
     "scripts/my-script/meta.json",
@@ -280,6 +305,43 @@ test("a bad submission is blocked and labelled", () => {
   assert.ok(outcome.summary.labels.includes("needs-changes"));
   assert.ok(outcome.summary.labels.includes("needs-careful-review")); // author mismatch
   assert.ok(outcome.summary.outside.includes("README.md"));
+});
+
+test("pull requests opened by the submission service's bot skip the author comparison", () => {
+  const root = makeRepo({ "my-script": goodFiles() });
+  const byBot = review({ root, changed: ["scripts/my-script/script.js", "scripts/my-script/meta.json", "scripts/my-script/icon.png"], prAuthor: "scriptwell-submissions[bot]" });
+  assert.ok(!byBot.markdown.includes("author-mismatch"), byBot.markdown);
+  const byPerson = review({ root, changed: ["scripts/my-script/script.js", "scripts/my-script/meta.json", "scripts/my-script/icon.png"], prAuthor: "someone-else" });
+  assert.ok(byPerson.markdown.includes("author-mismatch"), byPerson.markdown);
+});
+
+test("screenshots: known names pass, are listed, and are shown when the head commit is known", () => {
+  const root = makeRepo({ "my-script": goodFiles({ "screenshots/small.png": pngHeader(316, 316), "screenshots/app.png": pngHeader(780, 1600) }) });
+  const changed = ["scripts/my-script/script.js", "scripts/my-script/meta.json", "scripts/my-script/icon.png", "scripts/my-script/screenshots/small.png", "scripts/my-script/screenshots/app.png"];
+  const plain = review({ root, changed, prAuthor: "octocat" });
+  assert.equal(plain.summary.hard, 0, plain.markdown);
+  assert.deepEqual(plain.summary.scripts[0].screenshots, ["small", "app"]);
+  assert.ok(plain.markdown.includes("| Screenshots | `small`, `app` |"));
+  assert.ok(!plain.markdown.includes("<img"), "no head commit, no pictures");
+
+  const withHead = review({ root, changed, prAuthor: "octocat", headRepository: "octocat/scriptwell-gallery", headSha: "0123456789abcdef0123456789abcdef01234567" });
+  assert.ok(withHead.markdown.includes('<img alt="small" src="https://raw.githubusercontent.com/octocat/scriptwell-gallery/0123456789abcdef0123456789abcdef01234567/scripts/my-script/screenshots/small.png"'));
+  assert.equal(screenshotURL({ headRepository: "bad repo", headSha: "abc1234" }, "my-script", "small"), null);
+  assert.equal(screenshotURL({ headRepository: "a/b", headSha: "not-a-sha" }, "my-script", "small"), null);
+  assert.equal(screenshotURL({ headRepository: "a/b", headSha: "abc1234" }, "my-script", "banner"), null);
+});
+
+test("screenshots: unknown names, wrong shapes and symlinks are blocking", () => {
+  const root = makeRepo({ "my-script": goodFiles({ "screenshots/small.png": pngHeader(676, 316), "screenshots/banner.png": pngHeader(316, 316) }) });
+  symlinkSync(path.join(root, "scripts", "my-script", "icon.png"), path.join(root, "scripts", "my-script", "screenshots", "medium.png"));
+  const result = reviewScript({ root, id: "my-script" });
+  const ids = result.findings.filter((f) => f.severity === "hard").map((f) => f.ruleId).sort();
+  assert.deepEqual(ids, ["invalid-file", "screenshot-aspect", "unexpected-file"]);
+  assert.deepEqual(result.screenshots, []);
+
+  // A file where the folder should be.
+  const flat = makeRepo({ "my-script": goodFiles({ screenshots: "x" }) });
+  assert.ok(reviewScript({ root: flat, id: "my-script" }).findings.some((f) => f.ruleId === "invalid-file"));
 });
 
 test("files outside script folders are only soft for maintainers", () => {
@@ -348,8 +410,9 @@ test("index build: contract fields, sorting, hidden handling", () => {
   assert.deepEqual(Object.keys(zeta), [
     "id", "name", "author", "version", "description", "permissions", "minAppVersion", "widgetSizes",
     "license", "category", "status", "sha256", "size", "scriptPath", "iconPath", "readmePath", "updatedAt",
-    "createdAt", "featured", "blurb", "stars", "installs", "starsURL", "homepage",
+    "createdAt", "featured", "blurb", "stars", "installs", "starsURL", "homepage", "screenshots",
   ]);
+  assert.deepEqual(zeta.screenshots, {});
   assert.equal(zeta.featured, null);
   assert.equal(zeta.stars, null);
   assert.deepEqual(index.hero, []);
@@ -364,6 +427,16 @@ test("index build: contract fields, sorting, hidden handling", () => {
   assert.ok(existsSync(path.join(out, "scripts", "zeta-script", "script.js")));
   assert.ok(!existsSync(path.join(out, "scripts", "alpha-script")), "hidden scripts are not published");
   assert.deepEqual(JSON.parse(readFileSync(path.join(out, "index.json"), "utf8")), index);
+});
+
+test("index build publishes screenshots and lists them by name", () => {
+  const root = makeRepo({ "pic-script": goodFiles({ "meta.json": JSON.stringify(validMeta({ id: "pic-script" })), "screenshots/small.png": pngHeader(316, 316), "screenshots/app.png": pngHeader(780, 1600) }) });
+  const out = path.join(root, "_site");
+  const { index, failures } = buildIndex({ root, out });
+  assert.deepEqual(failures, []);
+  assert.deepEqual(index.scripts[0].screenshots, { small: "scripts/pic-script/screenshots/small.png", app: "scripts/pic-script/screenshots/app.png" });
+  assert.ok(existsSync(path.join(out, "scripts", "pic-script", "screenshots", "small.png")));
+  assert.ok(existsSync(path.join(out, "scripts", "pic-script", "screenshots", "app.png")));
 });
 
 test("index build: featured.json and stats.json feed the front page", () => {

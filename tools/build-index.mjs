@@ -92,6 +92,8 @@ export function indexEntry(result, updatedAt, hasReadme, extras = {}) {
     installs: Number.isInteger(stats.installs) ? stats.installs : null,
     starsURL: typeof stats.starsURL === "string" && stats.starsURL.startsWith("https://github.com/") ? stats.starsURL : null,
     homepage: meta.homepage || null,
+    // Pictures the author captured in the app: widget families and "app" for the mini-app.
+    screenshots: Object.fromEntries((result.screenshots || []).map((name) => [name, `${folder}/screenshots/${name}.png`])),
   };
 }
 
@@ -174,6 +176,10 @@ export function buildIndex({ root, out, now = new Date() }) {
       mkdirSync(target, { recursive: true });
       for (const name of ["script.js", "meta.json", "icon.png", "README.md"]) {
         if (existsSync(path.join(folder, name))) copyFileSync(path.join(folder, name), path.join(target, name));
+      }
+      if ((result.screenshots || []).length > 0) {
+        mkdirSync(path.join(target, "screenshots"), { recursive: true });
+        for (const name of result.screenshots) copyFileSync(path.join(folder, "screenshots", `${name}.png`), path.join(target, "screenshots", `${name}.png`));
       }
     }
   }

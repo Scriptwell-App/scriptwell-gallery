@@ -1,37 +1,6 @@
 {
   "$comment": "Maintainers' picks for the gallery's front page. Ids must exist in scripts/. The first hero is the banner; the rest and editorsChoice fill the Editors' Choice shelf. Blurbs are one line.",
-  "hero": [
-    "golden-hour",
-    "minesweeper",
-    "cowsay-news",
-    "repo-stats"
-  ],
-  "editorsChoice": [
-    "day-plan",
-    "artwork-of-the-day",
-    "planes-overhead",
-    "portfolio-pulse",
-    "recovery-score",
-    "newsstand",
-    "shelf-scanner",
-    "star-chart",
-    "parked-car",
-    "palette-lab"
-  ],
-  "blurbs": {
-    "cowsay-news": "A cow takes the temperature of today's headlines, or says whatever you tell it to.",
-    "repo-stats": "Stars, forks and open issues for any repository, right on your Home Screen.",
-    "golden-hour": "Know exactly when the light turns golden, with a countdown on your Lock Screen.",
-    "minesweeper": "The whole game inside a Home Screen widget, first tap always safe.",
-    "day-plan": "Calendar, reminders and free gaps on one timeline, with the commute weather.",
-    "artwork-of-the-day": "A public-domain masterpiece from the Art Institute of Chicago, new every morning.",
-    "planes-overhead": "See what is flying over you right now, and point your phone at it.",
-    "portfolio-pulse": "Stocks, ETFs and coins in one total, with allocation and a 30-day trend.",
-    "recovery-score": "HRV, resting heart rate, breathing and sleep against your own baseline.",
-    "newsstand": "Your feeds laid out like a front page, with read-later and unread tracking.",
-    "shelf-scanner": "Scan a barcode, track your pages, and see when you will finish the book.",
-    "star-chart": "Chores become stars in a widget your kids can tap themselves.",
-    "parked-car": "Finds where you parked by itself and walks you back, meter timer included.",
-    "palette-lab": "Harmonies, WCAG contrast grids and CSS export for your colour palettes."
-  }
+  "hero": [],
+  "editorsChoice": [],
+  "blurbs": {}
 }

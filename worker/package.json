@@ -1,0 +1,22 @@
+{
+  "name": "scriptwell-gallery-submit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker that turns a submission from the Scriptwell app into a pull request on the gallery repository.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/worker.test.mjs",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "acorn": "^8.12.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

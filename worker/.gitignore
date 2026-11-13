@@ -1,0 +1,4 @@
+# Local tooling
+.dev.vars
+.wrangler/
+node_modules/
