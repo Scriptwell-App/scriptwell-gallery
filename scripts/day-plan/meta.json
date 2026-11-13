@@ -1,0 +1,23 @@
+{
+  "id": "day-plan",
+  "name": "Day Plan",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Today's calendar events and reminders merged into one timeline with free gaps, a live next-up countdown and Apple Weather for your commute",
+  "permissions": [
+    "location",
+    "calendar",
+    "reminders"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large",
+    "extraLarge",
+    "rectangular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "productivity"
+}

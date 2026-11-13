@@ -4,6 +4,9 @@
 // @color       #6B8E4E
 // @permissions health
 // @widget      small, medium, large, circular, rectangular, inline
+// @version     1.0.0
+// @author      scriptwell
+// @category    health-fitness
 
 // ───────────────────────── Palette and sprite
 

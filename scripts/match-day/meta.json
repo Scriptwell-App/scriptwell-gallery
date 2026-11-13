@@ -1,0 +1,22 @@
+{
+  "id": "match-day",
+  "name": "Match Day",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Live scores, fixtures and results for the teams you follow, from ESPN's public scoreboard at site.api.espn.com, with kick-offs added to your calendar and a notification at full time",
+  "permissions": [
+    "network",
+    "calendar",
+    "notifications"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large",
+    "rectangular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "sports"
+}

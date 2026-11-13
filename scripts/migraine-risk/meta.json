@@ -1,21 +1,21 @@
 {
-  "author" : "scriptwell",
-  "category" : "utilities",
-  "description" : "Pixel-art migraine risk forecast from local Apple Weather (pressure swings, humidity, temperature, storms)",
-  "id" : "migraine-risk",
-  "license" : "MIT",
-  "minAppVersion" : "1.0",
-  "name" : "Migraine Risk",
-  "permissions" : [
+  "id": "migraine-risk",
+  "name": "Migraine Risk",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Pixel-art migraine risk forecast from local Apple Weather (pressure swings, humidity, temperature, storms)",
+  "permissions": [
     "location"
   ],
-  "version" : "1.0.0",
-  "widgetSizes" : [
+  "minAppVersion": "1.0",
+  "widgetSizes": [
     "small",
     "medium",
     "large",
     "circular",
     "rectangular",
     "inline"
-  ]
+  ],
+  "license": "MIT",
+  "category": "utilities"
 }

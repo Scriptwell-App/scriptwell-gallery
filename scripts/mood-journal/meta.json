@@ -1,0 +1,17 @@
+{
+  "id": "mood-journal",
+  "name": "Mood Journal",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Log how you feel each day on a five-point scale with a note and tags. On-device AI pulls themes from your notes and writes a weekly reflection; a 12-week heatmap, weekday averages and tag counts show the patterns. Everything stays on the device.",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large",
+    "circular"
+  ],
+  "license": "MIT",
+  "category": "lifestyle"
+}

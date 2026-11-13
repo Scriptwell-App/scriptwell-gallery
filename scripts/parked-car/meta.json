@@ -1,0 +1,22 @@
+{
+  "id": "parked-car",
+  "name": "Parked Car",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Remembers where you parked: automatically when background runs see you switch from driving to walking, or with one tap. Map widget, street name, parking-meter countdown, walking directions, a photo of the spot and a history of past spots.",
+  "permissions": [
+    "location",
+    "notifications",
+    "camera",
+    "motion"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large",
+    "rectangular"
+  ],
+  "license": "MIT",
+  "category": "navigation"
+}

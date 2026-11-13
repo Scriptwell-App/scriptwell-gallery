@@ -1,0 +1,18 @@
+{
+  "id": "palette-lab",
+  "name": "Palette Lab",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Build colour palettes with harmonies, a WCAG contrast matrix and live previews, then export them as JSON or CSS custom properties. Nothing leaves the device.",
+  "permissions": [
+    "clipboard"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "graphics-design"
+}

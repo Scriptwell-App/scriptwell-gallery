@@ -1,0 +1,15 @@
+{
+  "id": "minesweeper",
+  "name": "Minesweeper",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Classic Minesweeper played entirely inside a Home Screen widget, with a bigger board in the mini-app, a flag mode, a live timer and best times per size",
+  "permissions": [],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "games"
+}
