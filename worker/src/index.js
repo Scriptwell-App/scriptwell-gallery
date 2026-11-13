@@ -4,6 +4,8 @@
  *   POST /v1/submit   JSON { meta, script, icon, readme?, screenshots?, deviceToken, ownerToken?, app }
  *                     → 200 { pullRequest, number, created, ownerToken?, findings }
  *                     → 4xx { error, code, findings? }
+ *   POST /v1/star     JSON { id, starred, voterToken, deviceToken } → 200 { id, starred, stars }
+ *   GET  /v1/stars    → 200 { "<id>": { "stars": n }, … }   (see stars.js)
  *   GET  /v1/health   → 200 { ok: true }
  *
  * What it does, in order: size and shape checks; rate limits (KV counters per
@@ -15,10 +17,13 @@
  * gallery repository through a GitHub App.
  *
  * It stores: the SHA-256 of each owner secret, keyed by script id, and the
- * daily counters. Nothing about devices or people.
+ * daily counters (KV); and for stars, one hash per install and script (D1).
+ * Nothing about devices or people.
  */
 import { validateSubmission, LIMITS } from "./checks.js";
 import { verifyDeviceToken } from "./devicecheck.js";
+import { publishedIds } from "./gallery-index.js";
+import { star, starCounts } from "./stars.js";
 import { GitHub, GitHubError } from "./github.js";
 import { commitMessage, pullRequestBody, pullRequestTitle, updateComment } from "./pull-request.js";
 import { HttpError, json, randomToken, sha256Hex, utcDay } from "./util.js";
@@ -33,12 +38,21 @@ export default {
           github: Boolean(env.GITHUB_APP_ID && env.GITHUB_INSTALLATION_ID && env.GITHUB_APP_PRIVATE_KEY),
           deviceCheck: env.REQUIRE_DEVICE_CHECK === "false" || Boolean(env.APPLE_TEAM_ID && env.DEVICECHECK_KEY_ID && env.DEVICECHECK_PRIVATE_KEY),
           kv: Boolean(env.SUBMISSIONS),
+          stars: Boolean(env.STARS),
         };
         return json(200, { ok: true, repository: env.GALLERY_REPOSITORY, deviceCheckEnvironment: env.DEVICECHECK_ENVIRONMENT || "production", configured });
       }
       if (url.pathname === "/v1/submit") {
         if (request.method !== "POST") throw new HttpError(405, "Use POST.", { code: "method" });
         return await submit(request, env, ctx);
+      }
+      if (url.pathname === "/v1/star") {
+        if (request.method !== "POST") throw new HttpError(405, "Use POST.", { code: "method" });
+        return await star(request, env, ctx);
+      }
+      if (url.pathname === "/v1/stars") {
+        if (request.method !== "GET") throw new HttpError(405, "Use GET.", { code: "method" });
+        return await starCounts(request, env, ctx);
       }
       throw new HttpError(404, "Not found.", { code: "not-found" });
     } catch (error) {
@@ -81,18 +95,6 @@ async function checkRateLimits(env, request) {
     // KV is eventually consistent; these are soft limits against floods, not accounting.
     await Promise.all(keys.map(({ key }, index) => env.SUBMISSIONS.put(key, String(Number(counts[index] || 0) + 1), { expirationTtl: 2 * 86400 })));
   };
-}
-
-async function publishedIds(env, fetchImpl) {
-  try {
-    const response = await fetchImpl(env.GALLERY_INDEX_URL, { cf: { cacheTtl: 300, cacheEverything: true } });
-    if (!response.ok) return null;
-    const index = await response.json();
-    const entries = Array.isArray(index) ? index : Array.isArray(index.scripts) ? index.scripts : Array.isArray(index.entries) ? index.entries : [];
-    return new Set(entries.map((entry) => entry && entry.id).filter((id) => typeof id === "string"));
-  } catch {
-    return null;
-  }
 }
 
 async function submit(request, env, ctx) {

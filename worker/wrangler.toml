@@ -37,6 +37,10 @@ DEVICECHECK_ENVIRONMENT = "development"
 IP_DAILY_LIMIT = "30"
 GLOBAL_DAILY_LIMIT = "300"
 
+# Star limits (taps per day, starring and unstarring alike). Counters live in D1.
+STAR_IP_DAILY_LIMIT = "300"
+STAR_GLOBAL_DAILY_LIMIT = "20000"
+
 # Secrets, set with `wrangler secret put <NAME>`, never in this file:
 #   GITHUB_APP_PRIVATE_KEY   the App's private key (.pem as downloaded from GitHub)
 #   DEVICECHECK_PRIVATE_KEY  the DeviceCheck key (.p8 as downloaded from Apple)
@@ -44,3 +48,11 @@ GLOBAL_DAILY_LIMIT = "300"
 [[kv_namespaces]]
 binding = "SUBMISSIONS"
 id = "7266d417a9b9436f83dda7174dbec7cf"
+
+# Stars. Create with `npx wrangler d1 create scriptwell-stars`, paste the printed
+# database_id here, then `npx wrangler d1 migrations apply scriptwell-stars --remote`.
+[[d1_databases]]
+binding = "STARS"
+database_name = "scriptwell-stars"
+database_id = "2cdef6cc-7bf1-4847-8c9f-ae8908186d2d"
+migrations_dir = "migrations"

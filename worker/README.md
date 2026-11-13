@@ -1,7 +1,8 @@
 # Submission service
 
 A Cloudflare Worker that lets people submit scripts to the gallery from the
-Scriptwell app without a GitHub account. The app sends the script, its
+Scriptwell app without a GitHub account, and counts the stars people give
+scripts from the app (see [Stars](#stars)). The app sends the script, its
 metadata, icon and the screenshots the author captured; the Worker runs the
 gallery's checks, verifies with Apple that the request came from a real
 install of the app, and opens a pull request on this repository through a
@@ -25,6 +26,9 @@ everyone else.
   must present the secret. Nothing identifies the device or the person.
 - `rl:ip:<sha256 of address>:<day>` and `rl:all:<day>`: counters that expire
   after two days.
+- In D1 (`STARS`), for stars: one row per script and install, holding
+  `sha256(<install secret> + ":" + <script id>)` and the date; carried-over
+  counts in `star_baseline`; daily counters in `star_limits`.
 
 The DeviceCheck token is forwarded to Apple and not kept. Request logs are
 whatever Cloudflare keeps for your account.
@@ -75,8 +79,20 @@ npx wrangler login
 npx wrangler kv namespace create SUBMISSIONS
 ```
 
-Paste the printed `id` into `wrangler.toml` under `[[kv_namespaces]]`, and
-fill in `GITHUB_APP_ID`, `GITHUB_INSTALLATION_ID`, `APPLE_TEAM_ID` and
+Paste the printed `id` into `wrangler.toml` under `[[kv_namespaces]]`.
+
+```bash
+npx wrangler d1 create scriptwell-stars
+```
+
+Paste the printed `database_id` into `wrangler.toml` under `[[d1_databases]]`
+(the deploy fails until the placeholder is replaced), then create the tables:
+
+```bash
+npx wrangler d1 migrations apply scriptwell-stars --remote
+```
+
+Then fill in `GITHUB_APP_ID`, `GITHUB_INSTALLATION_ID`, `APPLE_TEAM_ID` and
 `DEVICECHECK_KEY_ID` under `[vars]`. Check `GALLERY_REPOSITORY` and
 `GALLERY_INDEX_URL` match your gallery.
 
@@ -98,7 +114,7 @@ Cloudflare account; delete that line to use the `workers.dev` address. Put
 the URL plus `/v1/submit` in the app: `submissionURL` in
 `GalleryConfig.standard` (`ScriptwellKit/Gallery/Gallery.swift`).
 
-`GET /v1/health` should answer `{"ok":true,…,"configured":{"github":true,"deviceCheck":true,"kv":true}}`.
+`GET /v1/health` should answer `{"ok":true,…,"configured":{"github":true,"deviceCheck":true,"kv":true,"stars":true}}`.
 A `false` names the part whose variables or secrets are missing. The ids can
 also be set in the Cloudflare dashboard instead of `wrangler.toml`
 (`keep_vars = true` stops a deploy from deleting them).
@@ -155,6 +171,54 @@ from GitHub or from the device that holds the secret.
 them if the gallery becomes popular; the 429 message tells people to try
 tomorrow.
 
+## Stars
+
+People star a script from its page in the app; no account is needed.
+
+```
+app ──POST /v1/star { id, starred, voterToken, deviceToken }──► Worker ──limits, index, DeviceCheck──► D1
+stars.yml (every 6 h) ──GET /v1/stars──► Worker ──► stats.json ──► publish.yml ──► index.json
+```
+
+- **One star per install per script.** The app makes a random `voterToken`
+  once and keeps it in the Keychain. The Worker stores only
+  `sha256(voterToken + ":" + id)`, so it can count an install once and let it
+  take the star back, but cannot link two stars, or a star and a device.
+- **Only real installs.** Every tap carries a DeviceCheck token, checked like
+  submissions. Several devices can still star several times; that is the limit
+  of what can be done without accounts.
+- **Only published scripts.** The id must be in `index.json` (cached five
+  minutes).
+- **Limits** live in D1, not KV (KV's free plan allows 1,000 writes a day):
+  `STAR_IP_DAILY_LIMIT` (300 taps per address per day) and
+  `STAR_GLOBAL_DAILY_LIMIT` (20,000 a day). They are counted before
+  DeviceCheck, so a flood never reaches Apple.
+- `GET /v1/stars` answers `{ "<id>": { "stars": n } }`, the format of
+  `stats.json`, cached at the edge for five minutes. `stars.yml` reads it from
+  the repository variable `STARS_URL`, or `https://scriptwellworker.o-h.dev/v1/stars`.
+
+### Carrying over the old 👍 counts
+
+Before the first run of the new `stars.yml` overwrites `stats.json`, copy its
+counts into D1 once, so no script loses its stars:
+
+```bash
+node scripts/stars-baseline.mjs ../stats.json > baseline.sql
+```
+
+```bash
+npx wrangler d1 execute scriptwell-stars --remote --file baseline.sql
+```
+
+The baseline is added to the live count. The old `Star: <id>` issues can be
+closed afterwards.
+
+### Taking a star count down
+
+```bash
+npx wrangler d1 execute scriptwell-stars --remote --command "DELETE FROM stars WHERE script_id = '<id>'"
+```
+
 ## Development
 
 ```bash
@@ -164,7 +228,8 @@ npm test
 Tests cover the checks, the key handling (GitHub's PKCS#1 keys are converted
 to PKCS#8 in the Worker, so the `.pem` is used as downloaded), the DeviceCheck
 request, the GitHub call sequence and the handler, all against fake network
-and KV. `wrangler dev` runs it locally; without a device token set
+and KV. The star tests run the real migration on Node's built-in SQLite as a stand-in
+for D1. `wrangler dev` runs it locally; without a device token set
 `REQUIRE_DEVICE_CHECK=false` in a `.dev.vars` file.
 
 The request body (`src/index.js`) is `{ meta, script, icon, readme?,
