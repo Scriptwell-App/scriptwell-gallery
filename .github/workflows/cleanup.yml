@@ -1,0 +1,34 @@
+name: Clean up submission branches
+
+# The submission service (worker/) commits each submission from the app to a
+# branch named submit/<id> in this repository. Once the pull request is closed
+# (merged or not) the branch has done its job; delete it so they do not pile up.
+# Only branches with that prefix in this repository are touched; forks are not
+# affected.
+
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  delete-branch:
+    if: github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.event.pull_request.head.ref, 'submit/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Delete the head branch
+        uses: actions/github-script@v7
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        with:
+          script: |
+            const ref = `heads/${process.env.HEAD_REF}`;
+            try {
+              await github.rest.git.deleteRef({ owner: context.repo.owner, repo: context.repo.repo, ref });
+              core.info(`Deleted ${ref}`);
+            } catch (error) {
+              core.info(`Could not delete ${ref}: ${error.message}`);
+            }

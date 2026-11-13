@@ -13,6 +13,8 @@
  *   --base-root <dir>            checkout of the base branch, to detect updates (optional)
  *   --pr-author <login>          GitHub login of the PR author (optional)
  *   --author-association <a>     OWNER | MEMBER | COLLABORATOR | CONTRIBUTOR | ... (optional)
+ *   --head-repo <owner/name>     repository and commit of the PR head, so the summary can show
+ *   --head-sha <sha>             the screenshots inline (optional)
  *   --out <dir>                  where to write review.md and review.json (default: .)
  *
  * Exit code: 1 if there is any hard finding, otherwise 0.
@@ -25,12 +27,18 @@ import {
 } from "./lib/common.mjs";
 import { analyzeScript } from "./analyze.mjs";
 import { validateMeta } from "./validate-meta.mjs";
-import { checkIconBytes } from "./lib/png.mjs";
+import { checkIconBytes, checkScreenshotBytes, screenshotName, SCREENSHOT_NAMES, SCREENSHOT_LIMITS } from "./lib/png.mjs";
 
 export const COMMENT_MARKER = "<!-- scriptwell-gallery-review -->";
+/** GitHub Apps act as "<slug>[bot]"; the submission service is one. */
+export const isBot = (login) => /\[bot\]$/.test(String(login || ""));
 const MAINTAINER_ASSOCIATIONS = new Set(["OWNER", "MEMBER", "COLLABORATOR"]);
 const MAX_BYTES = { "script.js": 1024 * 1024, "meta.json": 16 * 1024, "icon.png": 4 * 1024 * 1024, "README.md": 64 * 1024 };
+/** Read cap for one screenshot; the real limit is applied by checkScreenshotBytes so the message names it. */
+const MAX_SCREENSHOT_READ = 4 * 1024 * 1024;
 const MAX_COMMENT_LENGTH = 60000;
+const REPO_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+const SHA_PATTERN = /^[0-9a-f]{7,40}$/;
 
 /**
  * Split changed paths into script folders and everything else.
@@ -42,8 +50,10 @@ export function classifyPaths(paths) {
   for (const raw of paths) {
     const changed = String(raw).trim();
     if (changed === "") continue;
-    const match = /^scripts\/([^/]+)\/([^/]+)$/.exec(changed);
-    if (match && ID_PATTERN.test(match[1]) && SCRIPT_FILES.includes(match[2])) ids.add(match[1]);
+    // scripts/<id>/<file> or scripts/<id>/screenshots/<file>. Any file under
+    // screenshots/ belongs to the script; reviewScript rejects unknown names.
+    const match = /^scripts\/([^/]+)\/(?:([^/]+)|screenshots\/([^/]+))$/.exec(changed);
+    if (match && ID_PATTERN.test(match[1]) && (match[3] !== undefined || SCRIPT_FILES.includes(match[2]))) ids.add(match[1]);
     else outside.push(changed);
   }
   return { ids: [...ids].sort(), outside };
@@ -70,7 +80,7 @@ export function reviewScript({ root, id, baseRoot, prAuthor, isMaintainer = fals
   const findings = [];
   const add = (ruleId, severity, message, line = 0) => findings.push({ ruleId, severity, message, line, column: 0 });
   const baseMeta = readBaseMeta(baseRoot, id);
-  const result = { id, kind: baseMeta ? "update" : "new", meta: null, findings, analysis: null, sha256: null, size: 0 };
+  const result = { id, kind: baseMeta ? "update" : "new", meta: null, findings, analysis: null, sha256: null, size: 0, screenshots: [] };
 
   if (!ID_PATTERN.test(id)) {
     add("invalid-folder-name", "hard", "Folder names must be 3-50 characters: lowercase letters, digits and hyphens.");
@@ -86,9 +96,14 @@ export function reviewScript({ root, id, baseRoot, prAuthor, isMaintainer = fals
     return result;
   }
 
-  // Only the four known files may exist in a script folder.
+  // Only the four known files and the screenshots folder may exist in a script folder.
   for (const entry of readdirSync(dir)) {
-    if (!SCRIPT_FILES.includes(entry)) add("unexpected-file", "hard", `Unexpected entry in the script folder: ${entry}. Allowed: ${SCRIPT_FILES.join(", ")}.`);
+    if (entry === "screenshots") {
+      if (lstatSync(path.join(dir, entry)).isDirectory()) result.screenshots = reviewScreenshots(path.join(dir, entry), add);
+      else add("invalid-file", "hard", "screenshots is not a regular directory (symlinks are not allowed).");
+      continue;
+    }
+    if (!SCRIPT_FILES.includes(entry)) add("unexpected-file", "hard", `Unexpected entry in the script folder: ${entry}. Allowed: ${SCRIPT_FILES.join(", ")} and a screenshots/ folder.`);
   }
 
   const files = {};
@@ -141,7 +156,10 @@ export function reviewScript({ root, id, baseRoot, prAuthor, isMaintainer = fals
 
   const meta = result.meta;
   if (meta && typeof meta.author === "string") {
-    if (prAuthor && meta.author.toLowerCase() !== String(prAuthor).toLowerCase() && !isMaintainer) {
+    // Pull requests from the submission service are opened by its GitHub App
+    // ("<name>[bot]") on behalf of an author who has no GitHub account here;
+    // the body of the pull request says so. Only a person's handle is compared.
+    if (prAuthor && !isBot(prAuthor) && meta.author.toLowerCase() !== String(prAuthor).toLowerCase() && !isMaintainer) {
       add("author-mismatch", "soft", `meta.json author is "${meta.author}" but the pull request was opened by "${prAuthor}".`);
     }
     if (baseMeta && typeof baseMeta.author === "string" && baseMeta.author.toLowerCase() !== meta.author.toLowerCase()) {
@@ -173,6 +191,37 @@ export function reviewScript({ root, id, baseRoot, prAuthor, isMaintainer = fals
   return result;
 }
 
+/**
+ * The screenshots folder: only <family>.png and app.png, each a regular PNG of
+ * the right shape and size. Returns the names found, in the gallery's order.
+ */
+function reviewScreenshots(folder, add) {
+  const found = [];
+  for (const entry of readdirSync(folder)) {
+    const name = screenshotName(entry);
+    if (!name) {
+      add("unexpected-file", "hard", `Unexpected file in screenshots/: ${entry}. Allowed: ${SCREENSHOT_NAMES.map((n) => n + ".png").join(", ")}.`);
+      continue;
+    }
+    const file = readRegularFile(path.join(folder, entry), MAX_SCREENSHOT_READ);
+    if (file.problem) {
+      add("invalid-file", "hard", `screenshots/${entry} ${file.problem}.`);
+      continue;
+    }
+    const findings = checkScreenshotBytes(name, file.buffer, SCREENSHOT_LIMITS);
+    for (const finding of findings) add(finding.ruleId, finding.severity, finding.message);
+    if (findings.length === 0) found.push(name);
+  }
+  return SCREENSHOT_NAMES.filter((name) => found.includes(name));
+}
+
+/** Where a screenshot of the pull request head can be loaded from, or null when the head is unknown. */
+export function screenshotURL({ headRepository, headSha }, id, name) {
+  if (!REPO_PATTERN.test(String(headRepository || "")) || !SHA_PATTERN.test(String(headSha || ""))) return null;
+  if (!ID_PATTERN.test(id) || !SCREENSHOT_NAMES.includes(name)) return null;
+  return `https://raw.githubusercontent.com/${headRepository}/${headSha}/scripts/${id}/screenshots/${name}.png`;
+}
+
 /** Inline code for a table cell: a "|" would otherwise end the cell, even inside code. */
 function cell(value, maxLength) {
   return code(value, maxLength).replace(/\|/g, "\\|");
@@ -184,7 +233,7 @@ function findingLine(finding) {
 }
 
 /** Build the pull request comment. All submission-controlled text is rendered as inline code. */
-export function renderMarkdown({ results, outside, outsideSeverity }) {
+export function renderMarkdown({ results, outside, outsideSeverity, head = {} }) {
   const all = results.flatMap((r) => r.findings);
   let hard = all.filter((f) => f.severity === "hard").length;
   let soft = all.filter((f) => f.severity === "soft").length;
@@ -219,7 +268,14 @@ export function renderMarkdown({ results, outside, outsideSeverity }) {
         const m = analysis.metrics;
         lines.push(`| Size | ${m.sourceBytes} chars, ${m.lineCount} lines, longest code line ${m.maxCodeLineLength}, longest string ${m.maxStringLiteralLength} |`);
       }
+      lines.push(`| Screenshots | ${list(result.screenshots)} |`);
       lines.push(`| SHA-256 | ${cell(result.sha256, 80)} |`, "");
+      // The pictures themselves, when the head commit is known. Names and ids are
+      // validated, so the URL contains nothing the submission chose freely.
+      const pictures = (result.screenshots || []).map((name) => ({ name, url: screenshotURL(head, result.id, name) })).filter((p) => p.url);
+      if (pictures.length > 0) {
+        lines.push(pictures.map((p) => `<img alt="${p.name}" src="${p.url}" width="${p.name === "app" ? 220 : 260}">`).join(" "), "");
+      }
     }
     const hardFindings = result.findings.filter((f) => f.severity === "hard");
     const softFindings = result.findings.filter((f) => f.severity === "soft");
@@ -249,6 +305,7 @@ export function renderMarkdown({ results, outside, outsideSeverity }) {
       "- [ ] Every declared permission is needed, and every network host is expected for this script.",
       "- [ ] Name, description, icon and README follow GUIDELINES.md.",
       "- [ ] Everything under \"Needs a look\" has an innocent explanation.",
+      "- [ ] The screenshots show the script itself and nothing personal (the author's own data, names, places).",
       "",
     );
   }
@@ -270,7 +327,7 @@ function readChangedPaths(file) {
 }
 
 /** Review a whole change set. Shared by the CLI and by build-index. */
-export function review({ root, changed, all = false, baseRoot, prAuthor, authorAssociation }) {
+export function review({ root, changed, all = false, baseRoot, prAuthor, authorAssociation, headRepository, headSha }) {
   const isMaintainer = MAINTAINER_ASSOCIATIONS.has(String(authorAssociation || "").toUpperCase());
   let ids;
   let outside = [];
@@ -284,7 +341,7 @@ export function review({ root, changed, all = false, baseRoot, prAuthor, authorA
   }
   const results = ids.map((id) => reviewScript({ root, id, baseRoot, prAuthor, isMaintainer }));
   const outsideSeverity = isMaintainer ? "soft" : "hard";
-  const rendered = renderMarkdown({ results, outside, outsideSeverity });
+  const rendered = renderMarkdown({ results, outside, outsideSeverity, head: { headRepository, headSha } });
 
   const labels = [];
   if (rendered.hard > 0) labels.push("needs-changes");
@@ -304,6 +361,7 @@ export function review({ root, changed, all = false, baseRoot, prAuthor, authorA
         hard: r.findings.filter((f) => f.severity === "hard").length,
         soft: r.findings.filter((f) => f.severity === "soft").length,
         sha256: r.sha256,
+        screenshots: r.screenshots,
       })),
     },
     results,
@@ -323,6 +381,8 @@ function main() {
     baseRoot: options["base-root"] ? path.resolve(options["base-root"]) : undefined,
     prAuthor: options["pr-author"] || undefined,
     authorAssociation: options["author-association"] || undefined,
+    headRepository: options["head-repo"] || undefined,
+    headSha: options["head-sha"] || undefined,
   });
 
   const outDir = path.resolve(options.out || ".");

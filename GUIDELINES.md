@@ -63,6 +63,9 @@ but not their purpose. We will say why.
 - Name: at most 50 characters. Describe the script; do not shout or stuff
   keywords.
 - Description: at most 280 characters, in plain language.
+- Screenshots: pictures of the script's own widgets and mini-app, as the app
+  captures them. Nothing personal in them (your own calendar, location,
+  names, messages), no mock-ups, no other apps.
 
 ## Reports and takedowns
 
