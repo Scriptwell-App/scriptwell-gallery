@@ -1,0 +1,22 @@
+{
+  "id": "quake-watch",
+  "name": "Quake Watch",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Earthquakes near you from the USGS catalogue at earthquake.usgs.gov: a map, a magnitude chart, distance and depth for each quake, and a notification when a strong one happens within your radius",
+  "permissions": [
+    "network",
+    "location",
+    "notifications"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large",
+    "rectangular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "news"
+}

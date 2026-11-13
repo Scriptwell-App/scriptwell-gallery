@@ -6,6 +6,6 @@ Stars, forks and open issues for any GitHub repository.
 - **Widget sizes:** small, medium
 - **Permissions:** `network` to fetch data over HTTPS
 
-## Notes
+## How it works
 
 Put "owner/repo" in the widget's Parameter field.

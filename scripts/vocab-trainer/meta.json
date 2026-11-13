@@ -1,0 +1,19 @@
+{
+  "id": "vocab-trainer",
+  "name": "Vocab Trainer",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Learn English words with spaced repetition: definitions and phonetics from api.dictionaryapi.dev, on-device translation into your language, spoken pronunciation, flip-card reviews, streaks and accuracy stats",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "rectangular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "education"
+}

@@ -4,6 +4,9 @@
 // @color       #A16207
 // @permissions network
 // @widget      small, medium, large
+// @version     1.0.0
+// @author      va4w
+// @category    news
 
 // Headlines come from the BBC News front page feed.
 const FEED = "https://feeds.bbci.co.uk/news/rss.xml";

@@ -1,0 +1,18 @@
+{
+  "id": "topic-tracker",
+  "name": "Topic Tracker",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Follows up to five news topics through the GDELT project (api.gdeltproject.org): 30 days of coverage volume, a week-on-week trend, the latest headlines and the average tone of what is being written",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "news"
+}

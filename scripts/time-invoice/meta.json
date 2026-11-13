@@ -1,0 +1,19 @@
+{
+  "id": "time-invoice",
+  "name": "Time & Invoice",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Track billable hours per client with live timers, manual entries and one-tap import of today's calendar events, see monthly totals and hours per weekday, and produce CSV and plain-text invoices; nothing leaves the device",
+  "permissions": [
+    "calendar"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "rectangular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "business"
+}

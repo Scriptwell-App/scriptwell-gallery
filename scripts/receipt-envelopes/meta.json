@@ -1,0 +1,18 @@
+{
+  "id": "receipt-envelopes",
+  "name": "Receipt Envelopes",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Envelope budgeting with receipt scanning: photograph a receipt, on-device AI reads the merchant, total and date, you confirm, and the expense lands in its envelope. Nothing leaves your device.",
+  "permissions": [
+    "camera"
+  ],
+  "minAppVersion": "1.0",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "finance"
+}
