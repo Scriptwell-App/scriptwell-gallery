@@ -13,20 +13,23 @@ Pages.
 ## How it works
 
 ```
-author opens PR ──> validate.yml ──> summary comment + labels ──> maintainer reads script, merges
-                                                                          │
-app <── index.json + script files on GitHub Pages <── publish.yml <───────┘
+author opens PR ──> validate.yml ──> checks + automated review ──> summary comment + labels ──> maintainer reads script, merges
+                          │                                                                          │
+                          └── clearly malware / illegal / spam / objectionable: closed with the reason  │
+app <── index.json, scripts and screenshots on GitHub Pages <── publish.yml <────────────────────────┘
 ```
 
 | Path | What it is |
 |---|---|
-| `scripts/<id>/` | One folder per script: `script.js`, `meta.json`, `icon.png`, optional `README.md`. Two or more per App Store category to start; new ones arrive by pull request |
+| `scripts/<id>/` | One folder per script: `script.js`, `meta.json`, `icon.png`, optional `README.md` and `screenshots/` (one PNG per widget size plus `app.png`, captured in the app). Starts empty; scripts arrive by pull request |
 | `featured.json` | The front page: `hero` (the banner), `editorsChoice` and one-line `blurbs`, all by script id |
 | `stats.json` | Stars per script, written daily by the `stars.yml` workflow; never edit by hand |
 | `schema/meta.schema.json` | JSON Schema for `meta.json` |
 | `tools/analyzer/` | `analyzer-core.js` and `rules.json`: the same two files the app runs on imported scripts |
-| `tools/*.mjs` | CI entry points: `review-pr`, `analyze`, `validate-meta`, `check-icon`, `build-index` |
-| `.github/workflows/validate.yml` | Runs on every pull request; comments, labels, fails on blocking findings |
+| `tools/*.mjs` | CI entry points: `review-pr`, `analyze`, `validate-meta`, `check-icon`, `build-index`, and `moderate` (the automated review, below) |
+| `.github/workflows/validate.yml` | Runs on every pull request; checks, automated review, comments, labels, fails on blocking findings, closes clear rejections |
+| `.github/workflows/cleanup.yml` | Deletes a `submit/<id>` branch once its pull request is closed |
+| `worker/` | The submission service: a Cloudflare Worker that turns a submission from the app into a pull request, so authors need no GitHub account. Optional; see [worker/README.md](worker/README.md) |
 | `.github/workflows/stars.yml` | Counts 👍 reactions on the "Star: <id>" issues into `stats.json` once a day |
 | `.github/workflows/publish.yml` | Runs on merge to `main`; rebuilds `index.json` and deploys to Pages |
 
@@ -43,7 +46,7 @@ it are relative to `index.json`.
     {
       "id": "repo-stats",
       "name": "Repo Stats",
-      "author": "scriptwell",
+      "author": "octocat",
       "version": "1.0.0",
       "description": "Stars, forks and open issues for any GitHub repository",
       "permissions": ["network"],
@@ -63,8 +66,9 @@ it are relative to `index.json`.
       "blurb": "Stars, forks and open issues for any repository, right on your Home Screen.",
       "stars": 12,
       "installs": null,
-      "starsURL": "https://github.com/va4w/scriptwell-gallery/issues/4",
-      "homepage": null
+      "starsURL": "https://github.com/<owner>/scriptwell-gallery/issues/4",
+      "homepage": null,
+      "screenshots": { "small": "scripts/repo-stats/screenshots/small.png", "app": "scripts/repo-stats/screenshots/app.png" }
     }
   ],
   "hero": ["repo-stats"],
@@ -88,10 +92,41 @@ The app's Gallery tab shows shelves built from `index.json` alone:
 
 Search in the app ranks matches by name, then id and author, then category, permissions and description, and needs every word to match; results can be narrowed by permission and "has a widget", and sorted by name, newest, recently updated or most starred.
 
+## The automated review
+
+`validate.yml` runs `tools/moderate.mjs` after the static checks when the
+repository has an `ANTHROPIC_API_KEY` secret (Settings → Secrets and
+variables → Actions). It reads the script, `meta.json`, the README, the
+icon and the screenshots, with `GUIDELINES.md` as the standard, and answers
+in a fixed shape: a verdict (`approve`, `review`, `reject`) with a
+confidence and categories, a plain-language summary of what the script
+does, every host it contacts and what is sent there, what each permission is
+for, whether the description matches the code, and concerns for you. The
+answer goes into the same sticky comment, under the checks.
+
+What it may do on its own: close the pull request, and only for a
+high-confidence `reject` in one of four categories: `malware`, `illegal`,
+`spam`, `objectionable`. The comment then says why, the pull request gets
+the `rejected` label, and the author can fix the script and submit again.
+Reopening a closed pull request is your decision: a run started by a reopen
+never closes it again. Everything else (`review`, a lower confidence, the
+other categories) only adds `needs-careful-review` and a note.
+
+The review runs nothing. The submission is sent as data, the instructions
+say it is untrusted, the answer is constrained to a schema, and any free
+text from it is stripped of Markdown, links and mentions before it is
+posted. Treat it as a first opinion: it is good at summarising and at
+catching the obvious, and the decision to merge stays yours. Without the
+secret the step says "not set up" and everything else works as before. It
+costs a few cents per submission; `--model` in the workflow changes what it
+runs on. Read `tools/moderate.mjs` before changing the instructions.
+
 ## Reviewing a submission (about five minutes)
 
 1. Read the bot's summary comment. `needs-changes` means the author has work
-   to do; you can stop there.
+   to do; you can stop there. The automated review under it tells you what
+   the script does and where to look; read it, then verify it against the
+   code. Screenshots, when the author captured them, are inline.
 2. Compare **permissions declared** with **permissions used**, and with what
    the description promises. A clock does not need your location.
 3. Read `script.js` from top to bottom in the Files tab. It is one readable
@@ -99,10 +134,18 @@ Search in the app ranks matches by name, then id and author, then category, perm
 4. Clear every item under "Needs a look" (`needs-careful-review`): long
    strings, encoded data, an author that differs from the PR author, a status
    change, added permissions.
-5. Look at the icon, name, description and README against
-   [GUIDELINES.md](GUIDELINES.md). Then merge. `publish.yml` does the rest.
+5. Look at the icon, name, description, README and screenshots against
+   [GUIDELINES.md](GUIDELINES.md). A screenshot that shows the author's own
+   data is a reason to ask for another. Then merge. `publish.yml` does the rest.
 
 When unsure, do not merge. Ask the author in the pull request.
+
+Pull requests labelled `from-app` were opened by the submission service on
+behalf of someone without a GitHub account. They cannot answer here. If
+something blocks the script, close the pull request with a one-line reason;
+the app shows them the pull request, and submitting a fixed version from the
+app opens a new one. A resubmission while the pull request is open updates
+its branch and adds a comment.
 
 ## Taking a script down
 

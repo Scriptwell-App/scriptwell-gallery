@@ -1,0 +1,46 @@
+# Scriptwell gallery submission service. See README.md in this folder.
+name = "scriptwell-gallery-submit"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+# The ids below under "set in the dashboard" are not in this file, so a deploy
+# must not delete them.
+keep_vars = true
+
+# The service's address. The zone must be on the same Cloudflare account;
+# the deploy creates the DNS record and certificate. Remove this block to use
+# the workers.dev address instead.
+routes = [{ pattern = "scriptwellworker.o-h.dev", custom_domain = true }]
+
+[observability]
+enabled = true
+
+[vars]
+# The gallery repository the pull requests go to, and the index the app reads.
+GALLERY_REPOSITORY = "scriptwell-app/scriptwell-gallery"
+GALLERY_INDEX_URL = "https://scriptwell-app.github.io/scriptwell-gallery/index.json"
+GALLERY_BRANCH = "main"
+
+# Set in the dashboard (Workers → scriptwell-gallery-submit → Settings → Variables),
+# or add them here; `wrangler deploy` keeps dashboard values thanks to keep_vars:
+#   GITHUB_APP_ID, GITHUB_INSTALLATION_ID   the GitHub App installed on that one repository
+#   APPLE_TEAM_ID, DEVICECHECK_KEY_ID       DeviceCheck proves a request comes from a real install
+#   DEVICECHECK_ENVIRONMENT                 "production" for App Store and TestFlight builds,
+#                                           "development" for Xcode builds (default: production)
+# Set to "false" only on a private staging deployment used with the Simulator.
+REQUIRE_DEVICE_CHECK = "true"
+
+# Xcode-signed builds use Apple's development DeviceCheck environment; TestFlight
+# and App Store builds use production. Switch this before a TestFlight build.
+DEVICECHECK_ENVIRONMENT = "development"
+
+# Abuse limits. Counters live in KV and reset daily (UTC).
+IP_DAILY_LIMIT = "30"
+GLOBAL_DAILY_LIMIT = "300"
+
+# Secrets, set with `wrangler secret put <NAME>`, never in this file:
+#   GITHUB_APP_PRIVATE_KEY   the App's private key (.pem as downloaded from GitHub)
+#   DEVICECHECK_PRIVATE_KEY  the DeviceCheck key (.p8 as downloaded from Apple)
+
+[[kv_namespaces]]
+binding = "SUBMISSIONS"
+id = "7266d417a9b9436f83dda7174dbec7cf"

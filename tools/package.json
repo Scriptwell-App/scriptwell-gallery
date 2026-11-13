@@ -8,14 +8,18 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test test/analyzer.test.mjs",
+    "test": "node --test test/analyzer.test.mjs test/moderate.test.mjs",
     "analyze": "node analyze.mjs",
     "validate": "node review-pr.mjs --root .. --all --out ../.review",
-    "index": "node build-index.mjs --root .. --out ../_site"
+    "index": "node build-index.mjs --root .. --out ../_site",
+    "moderate": "node moderate.mjs"
   },
   "devDependencies": {
     "acorn": "^8.12.0",
     "ajv": "^8.17.0",
     "ajv-formats": "^3.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0"
   }
 }
