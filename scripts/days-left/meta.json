@@ -1,0 +1,14 @@
+{
+  "id": "days-left",
+  "name": "Days Left",
+  "author": "scriptwell",
+  "version": "1.0.0",
+  "description": "Today's date and how many days are left in the year",
+  "permissions": [],
+  "minAppVersion": "1.1",
+  "widgetSizes": [
+    "small"
+  ],
+  "license": "MIT",
+  "category": "utilities"
+}
