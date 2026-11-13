@@ -4,6 +4,9 @@
 // @color       #F59E0B
 // @permissions location
 // @widget      small
+// @version     1.0.1
+// @author      va4w
+// @category    utilities
 
 // Widget Parameter: "F" or "C" to force a temperature unit.
 
@@ -266,7 +269,7 @@ Script.widget(async ({ parameter }) => {
       alignment: "leading",
       spacing: 4,
       frame: { maxWidth: "infinity", maxHeight: "infinity", alignment: "topLeading" },
-      background: Widget.gradient([{ light: "#FFFFFF", dark: "#0F172A" }, `${lv.family}-500/25`], { direction: "topToBottom" }),
+      background: { light: `${lv.family}-50`, dark: "#1C1C1E" },
     }),
     refreshAfter: 30 * 60,
   };
