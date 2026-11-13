@@ -1,0 +1,16 @@
+{
+  "id": "hn-top-story",
+  "name": "HN Top Story",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Shows the top story on Hacker News",
+  "permissions": [
+    "network"
+  ],
+  "minAppVersion": "1.1",
+  "widgetSizes": [
+    "medium"
+  ],
+  "license": "MIT",
+  "category": "utilities"
+}
