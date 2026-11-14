@@ -1,0 +1,18 @@
+{
+  "id": "airthings-wave-plus",
+  "name": "Airthings Wave Plus test",
+  "author": "va4weblah",
+  "version": "1.0.0",
+  "description": "Reads your Airthings Wave Plus directly over Bluetooth. Returns the JSON in Shortcuts and shows every reading in a widget.",
+  "permissions": [
+    "bluetooth"
+  ],
+  "minAppVersion": "1.2",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "license": "MIT",
+  "category": "utilities"
+}
