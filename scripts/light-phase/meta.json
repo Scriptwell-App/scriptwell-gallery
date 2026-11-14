@@ -1,0 +1,21 @@
+{
+  "id": "light-phase",
+  "name": "Light Phase",
+  "author": "va4w",
+  "version": "1.0.0",
+  "description": "Golden hour, blue hour and twilight for photographers, worked out for where you are",
+  "permissions": [
+    "location"
+  ],
+  "minAppVersion": "1.1",
+  "widgetSizes": [
+    "small",
+    "medium",
+    "large",
+    "circular",
+    "rectangular",
+    "inline"
+  ],
+  "license": "MIT",
+  "category": "photo-video"
+}
