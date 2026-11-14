@@ -2,6 +2,9 @@
 // @description A two-player chess clock with presets, increments, pause and move counts
 // @icon        timer
 // @color       #16A34A
+// @version     1.0.0
+// @author      scriptwell
+// @category    utilities
 
 // ───────────── Settings and state
 

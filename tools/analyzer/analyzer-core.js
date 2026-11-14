@@ -235,7 +235,8 @@
       manifest.raw[key] = value;
       if (key === "permissions" || key === "widget") {
         manifest[key] = value.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean);
-      } else {
+      } else if (key !== "raw") {
+        // "raw" is the map above; a header line "// @raw x" must not replace it.
         manifest[key] = value;
       }
     }

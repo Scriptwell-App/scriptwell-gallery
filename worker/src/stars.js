@@ -9,6 +9,11 @@
  * Keychain. The Worker stores only sha256(voterToken + ":" + id): enough to
  * count an install once per script and to let it take the star back, and
  * nothing that ties two stars, or a star and a device, together.
+ *
+ * Copies of the app Apple DeviceCheck does not vouch for (sideloaded or
+ * self-built, signed by another team) may star too, within lower daily limits.
+ * Their rows carry verified = 0: counted like the others unless
+ * COUNT_UNVERIFIED_STARS is "false", and easy to delete if they are abused.
  */
 import { verifyDeviceToken } from "./devicecheck.js";
 import { publishedIds } from "./gallery-index.js";
@@ -33,25 +38,38 @@ export async function star(request, env, ctx) {
   if (typeof body.starred !== "boolean") throw new HttpError(400, "starred must be true or false.", { code: "bad-request" });
   if (typeof body.voterToken !== "string" || !TOKEN.test(body.voterToken)) throw new HttpError(400, "The request did not include a voter token.", { code: "bad-request" });
 
-  await checkRateLimits(env, request, ctx);
+  const ip = await sha256Hex(request.headers.get("cf-connecting-ip") || "unknown");
+  const day = utcDay();
+  await checkRateLimits(env, ctx, [
+    { key: `ip:${ip}:${day}`, limit: Number(env.STAR_IP_DAILY_LIMIT || 300) },
+    { key: `all:${day}`, limit: Number(env.STAR_GLOBAL_DAILY_LIMIT || 20000) },
+  ], () => new HttpError(429, "Too many stars today. Try again tomorrow.", { code: "rate-limited" }));
 
   const published = await publishedIds(env, fetchImpl);
   if (published === null) throw new HttpError(503, "The gallery index could not be read. Try again later.", { code: "index" });
   if (!published.has(id)) throw new HttpError(404, "That script is not in the gallery.", { code: "unknown-script" });
 
+  let verified = true;
   if (env.REQUIRE_DEVICE_CHECK !== "false") {
     const device = await verifyDeviceToken(env, body.deviceToken, fetchImpl);
-    if (!device.ok) throw new HttpError(401, device.reason, { code: "device-check" });
+    if (!device.ok) {
+      if (device.kind === "server" || env.ALLOW_UNVERIFIED_STARS !== "true") throw new HttpError(401, device.reason, { code: "device-check" });
+      await checkRateLimits(env, ctx, [
+        { key: `unverified:ip:${ip}:${day}`, limit: Number(env.UNVERIFIED_STAR_IP_DAILY_LIMIT || 30) },
+        { key: `unverified:all:${day}`, limit: Number(env.UNVERIFIED_STAR_DAILY_LIMIT || 2000) },
+      ], () => new HttpError(429, "Copies of the app that are not from the App Store or TestFlight can star only a few scripts a day. Try again tomorrow.", { code: "unverified-limit" }));
+      verified = false;
+    }
   }
 
   const voter = await sha256Hex(`${body.voterToken}:${id}`);
   const write = body.starred
-    ? env.STARS.prepare("INSERT OR IGNORE INTO stars (script_id, voter, created_at) VALUES (?1, ?2, ?3)").bind(id, voter, new Date().toISOString())
+    ? env.STARS.prepare("INSERT OR IGNORE INTO stars (script_id, voter, created_at, verified) VALUES (?1, ?2, ?3, ?4)").bind(id, voter, new Date().toISOString(), verified ? 1 : 0)
     : env.STARS.prepare("DELETE FROM stars WHERE script_id = ?1 AND voter = ?2").bind(id, voter);
   const [, counted] = await env.STARS.batch([
     write,
     env.STARS.prepare(
-      "SELECT (SELECT COUNT(*) FROM stars WHERE script_id = ?1) + COALESCE((SELECT stars FROM star_baseline WHERE script_id = ?1), 0) AS stars"
+      `SELECT (SELECT COUNT(*) FROM stars WHERE script_id = ?1${countedRows(env)}) + COALESCE((SELECT stars FROM star_baseline WHERE script_id = ?1), 0) AS stars`
     ).bind(id),
   ]);
   const stars = Number((counted.results && counted.results[0] && counted.results[0].stars) || 0);
@@ -68,7 +86,7 @@ export async function starCounts(request, env, ctx) {
   }
   const { results } = await env.STARS.prepare(
     `SELECT script_id, SUM(n) AS stars FROM (
-       SELECT script_id, COUNT(*) AS n FROM stars GROUP BY script_id
+       SELECT script_id, COUNT(*) AS n FROM stars WHERE 1 = 1${countedRows(env)} GROUP BY script_id
        UNION ALL SELECT script_id, stars AS n FROM star_baseline
      ) GROUP BY script_id ORDER BY script_id`
   ).all();
@@ -82,22 +100,23 @@ export async function starCounts(request, env, ctx) {
   return response;
 }
 
+/** The extra condition that leaves unverified stars out of the counts, when they are switched off. */
+function countedRows(env) {
+  return env.COUNT_UNVERIFIED_STARS === "false" ? " AND verified = 1" : "";
+}
+
 /**
  * Daily counters in D1 rather than KV: KV's free plan allows 1,000 writes a day,
- * which stars would use up. Counted before DeviceCheck, so a flood never reaches Apple.
+ * which stars would use up. The general ones are counted before DeviceCheck, so
+ * a flood never reaches Apple.
  */
-async function checkRateLimits(env, request, ctx) {
+async function checkRateLimits(env, ctx, limits, error) {
   const day = utcDay();
-  const ip = request.headers.get("cf-connecting-ip") || "unknown";
-  const limits = [
-    { key: `ip:${await sha256Hex(ip)}:${day}`, limit: Number(env.STAR_IP_DAILY_LIMIT || 300) },
-    { key: `all:${day}`, limit: Number(env.STAR_GLOBAL_DAILY_LIMIT || 20000) },
-  ];
   const bump = "INSERT INTO star_limits (key, day, count) VALUES (?1, ?2, 1) ON CONFLICT(key) DO UPDATE SET count = count + 1 RETURNING count";
   const rows = await env.STARS.batch(limits.map(({ key }) => env.STARS.prepare(bump).bind(key, day)));
   limits.forEach(({ limit }, index) => {
     const count = Number(rows[index].results && rows[index].results[0] && rows[index].results[0].count);
-    if (count > limit) throw new HttpError(429, "Too many stars today. Try again tomorrow.", { code: "rate-limited" });
+    if (count > limit) throw error();
   });
   // Sweep old days now and then; one in a hundred requests is plenty.
   if (Math.random() < 0.01) ctx.waitUntil(env.STARS.prepare("DELETE FROM star_limits WHERE day < ?1").bind(day).run().catch(() => {}));

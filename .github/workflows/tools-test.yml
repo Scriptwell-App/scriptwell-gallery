@@ -8,6 +8,7 @@ on:
     paths:
       - "tools/**"
       - "schema/**"
+      - "worker/**"
       - ".github/workflows/tools-test.yml"
 
 permissions:
@@ -44,3 +45,10 @@ jobs:
 
       - name: Dry-run index build
         run: node tools/build-index.mjs --root . --out _site
+
+      # The submission service imports the analyzer and tools/lib, so a change there can break it.
+      - name: Test the submission service
+        working-directory: worker
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm test

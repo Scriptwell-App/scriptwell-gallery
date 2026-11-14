@@ -65,7 +65,7 @@ function fakeKV(initial = {}) {
 /** D1 on Node's built-in SQLite, with the real migration, so the Worker's SQL runs as written. */
 function fakeD1() {
   const db = new DatabaseSync(":memory:");
-  db.exec(readFileSync(new URL("../migrations/0001_stars.sql", import.meta.url), "utf8"));
+  for (const name of ["0001_stars.sql", "0002_unverified_stars.sql"]) db.exec(readFileSync(new URL(`../migrations/${name}`, import.meta.url), "utf8"));
   const statement = (sql, args = []) => ({
     sql,
     bind: (...values) => statement(sql, values),
@@ -84,7 +84,8 @@ function fakeD1() {
 }
 
 /** A fake GitHub + Pages + Apple network. Records every call. */
-function fakeNetwork({ existingBranch = false, openPull = null, indexIds = ["repo-stats"], deviceStatus = 200 } = {}) {
+// `metaAuthors` maps a ref ("main", "submit/<id>") to the author in that ref's meta.json; refs not listed have none.
+function fakeNetwork({ existingBranch = false, openPull = null, indexIds = ["repo-stats"], deviceStatus = 200, metaAuthors = {} } = {}) {
   const calls = [];
   let pullCounter = 41;
   const respond = (status, body) => new Response(body === undefined ? "" : JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -109,6 +110,12 @@ function fakeNetwork({ existingBranch = false, openPull = null, indexIds = ["rep
     if (path.startsWith("/repos/va4w/scriptwell-gallery/pulls?")) return respond(200, openPull ? [openPull] : []);
     if (path === "/repos/va4w/scriptwell-gallery/pulls") { pullCounter += 1; return respond(201, { number: pullCounter, html_url: `https://github.com/va4w/scriptwell-gallery/pull/${pullCounter}` }); }
     if (/\/issues\/\d+\/(labels|comments)$/.test(path)) return respond(201, {});
+    if (u.pathname.startsWith("/repos/va4w/scriptwell-gallery/contents/scripts/")) {
+      const author = metaAuthors[u.searchParams.get("ref")];
+      if (author === undefined) return respond(404, { message: "Not Found" });
+      const content = Buffer.from(JSON.stringify({ id: "repo-stats-two", author }, null, 2)).toString("base64").replace(/(.{60})/g, "$1\n");
+      return respond(200, { content, encoding: "base64" });
+    }
     return respond(500, { message: `unexpected ${method} ${path}` });
   };
   return { calls, fetchImpl };
@@ -343,6 +350,59 @@ test("POST /v1/submit: updates need the owner token; a wrong one is refused", as
   assert.equal(body.ownerToken, undefined);
 });
 
+test("POST /v1/submit: updates must keep the author of the first submission", async () => {
+  const net = fakeNetwork({ existingBranch: true, openPull: { number: 7, html_url: "https://github.com/va4w/scriptwell-gallery/pull/7" } });
+  const kv = fakeKV({ "owner:repo-stats-two": JSON.stringify({ hash: await sha256Hex("secret-token"), author: "octocat" }) });
+  const e = env(net, kv, { REQUIRE_DEVICE_CHECK: "false" });
+
+  const renamed = await worker.fetch(post(goodPayload({ ownerToken: "secret-token", meta: { author: "someone-else", version: "1.0.1" } })), e, ctx);
+  assert.equal(renamed.status, 403);
+  const body = await renamed.json();
+  assert.equal(body.code, "author-changed");
+  assert.match(body.error, /"octocat"/);
+  assert.ok(!net.calls.some((c) => c.path.includes("/git/")), "nothing reached GitHub");
+
+  const recased = await worker.fetch(post(goodPayload({ ownerToken: "secret-token", meta: { author: "OctoCat", version: "1.0.1" } })), e, ctx);
+  assert.equal(recased.status, 200, JSON.stringify(await recased.json()));
+});
+
+test("POST /v1/submit: the first submission stores its author", async () => {
+  const net = fakeNetwork();
+  const kv = fakeKV();
+  const first = await worker.fetch(post(goodPayload()), env(net, kv, { REQUIRE_DEVICE_CHECK: "false" }), ctx);
+  assert.equal(first.status, 200);
+  assert.equal(JSON.parse(kv.store.get("owner:repo-stats-two")).author, "octocat");
+});
+
+test("POST /v1/submit: older records without an author take it from the gallery, never from the update", async () => {
+  const older = async () => fakeKV({ "owner:repo-stats-two": JSON.stringify({ hash: await sha256Hex("secret-token"), pullRequest: 7 }) });
+  const openPull = { number: 7, html_url: "https://github.com/va4w/scriptwell-gallery/pull/7" };
+  const update = (author) => post(goodPayload({ ownerToken: "secret-token", meta: { author, version: "1.0.1" } }));
+
+  // Published: the meta.json on main decides. A different name is refused and nothing is stored.
+  const publishedNet = fakeNetwork({ existingBranch: true, metaAuthors: { main: "octocat" } });
+  const publishedKV = await older();
+  const refused = await worker.fetch(update("someone-else"), env(publishedNet, publishedKV, { REQUIRE_DEVICE_CHECK: "false" }), ctx);
+  assert.equal(refused.status, 403);
+  assert.equal((await refused.json()).code, "author-changed");
+  assert.ok(!publishedNet.calls.some((c) => c.path.includes("/git/")), "nothing reached GitHub");
+  assert.equal(JSON.parse(publishedKV.store.get("owner:repo-stats-two")).author, undefined);
+
+  // The same name goes through and is stored with the rest of the record.
+  const accepted = await worker.fetch(update("octocat"), env(publishedNet, publishedKV, { REQUIRE_DEVICE_CHECK: "false" }), ctx);
+  assert.equal(accepted.status, 200);
+  const record = JSON.parse(publishedKV.store.get("owner:repo-stats-two"));
+  assert.equal(record.author, "octocat");
+  assert.equal(record.hash, await sha256Hex("secret-token"));
+  assert.equal(record.pullRequest, 7);
+
+  // Not merged yet: the meta.json last submitted on submit/<id> decides.
+  const pendingNet = fakeNetwork({ existingBranch: true, openPull, metaAuthors: { "submit/repo-stats-two": "octocat" } });
+  const pending = await worker.fetch(update("someone-else"), env(pendingNet, await older(), { REQUIRE_DEVICE_CHECK: "false" }), ctx);
+  assert.equal(pending.status, 403);
+  assert.equal((await pending.json()).code, "author-changed");
+});
+
 test("POST /v1/submit: ids already published cannot be claimed", async () => {
   const net = fakeNetwork();
   const response = await worker.fetch(post(goodPayload({ meta: { id: "repo-stats" } })), env(net, fakeKV(), { REQUIRE_DEVICE_CHECK: "false" }), ctx);
@@ -432,4 +492,71 @@ test("stars without a D1 binding answer 503", async () => {
   const network = fakeNetwork();
   const response = await worker.fetch(new Request("https://submit.example/v1/stars"), env(network, fakeKV()), ctx);
   assert.equal(response.status, 503);
+});
+
+// ---------- unverified installs (sideloaded, self-built) ----------
+
+test("POST /v1/submit: Apple refusing the token makes an unverified submission, labelled and noted", async () => {
+  const net = fakeNetwork({ deviceStatus: 400 });
+  const response = await worker.fetch(post(goodPayload({ deviceToken: "d".repeat(40) })), env(net, fakeKV(), { ALLOW_UNVERIFIED_SUBMISSIONS: "true" }), ctx);
+  const body = await response.json();
+  assert.equal(response.status, 200, JSON.stringify(body));
+  assert.equal(body.verified, false);
+  const pull = net.calls.find((c) => c.method === "POST" && c.path.endsWith("/pulls"));
+  assert.match(pull.body.body, /Unverified install/);
+  const labels = net.calls.find((c) => c.path.endsWith("/labels"));
+  assert.deepEqual(labels.body.labels, ["from-app", "unverified"]);
+});
+
+test("POST /v1/submit: verified submissions say so and carry no note", async () => {
+  const net = fakeNetwork();
+  const response = await worker.fetch(post(goodPayload({ deviceToken: "d".repeat(40) })), env(net, fakeKV(), { ALLOW_UNVERIFIED_SUBMISSIONS: "true" }), ctx);
+  const body = await response.json();
+  assert.equal(body.verified, true);
+  const pull = net.calls.find((c) => c.method === "POST" && c.path.endsWith("/pulls"));
+  assert.doesNotMatch(pull.body.body, /Unverified install/);
+});
+
+test("POST /v1/submit: unverified submissions have their own daily limit", async () => {
+  const net = fakeNetwork();
+  const day = new Date().toISOString().slice(0, 10);
+  const kv = fakeKV({ [`rl:unverified:ip:${await sha256Hex("203.0.113.9")}:${day}`]: "2" });
+  const response = await worker.fetch(post(goodPayload()), env(net, kv, { ALLOW_UNVERIFIED_SUBMISSIONS: "true", UNVERIFIED_IP_DAILY_LIMIT: "2" }), ctx);
+  assert.equal(response.status, 429);
+  assert.equal((await response.json()).code, "unverified-limit");
+  assert.ok(!net.calls.some((c) => c.path.includes("/git/")), "nothing reached GitHub");
+});
+
+test("POST /v1/submit: a problem on the server side is still an error, unverified allowed or not", async () => {
+  const net = fakeNetwork({ deviceStatus: 401 });
+  const response = await worker.fetch(post(goodPayload({ deviceToken: "d".repeat(40) })), env(net, fakeKV(), { ALLOW_UNVERIFIED_SUBMISSIONS: "true" }), ctx);
+  assert.equal(response.status, 401);
+  assert.equal((await response.json()).code, "device-check");
+});
+
+test("POST /v1/star: unverified installs can star within their own limit, and can be left out of the counts", async () => {
+  const network = fakeNetwork({ indexIds: ["repo-stats"], deviceStatus: 400 });
+  const d1 = fakeD1();
+  const e = env(network, fakeKV(), { STARS: d1, ALLOW_UNVERIFIED_STARS: "true", UNVERIFIED_STAR_IP_DAILY_LIMIT: "2" });
+  const tap = (voterToken) => worker.fetch(starRequest({ id: "repo-stats", starred: true, voterToken, deviceToken: "d".repeat(40) }), e, ctx);
+
+  const first = await tap("a".repeat(43));
+  assert.equal(first.status, 200);
+  assert.equal((await first.json()).stars, 1);
+  assert.equal(d1.db.prepare("SELECT verified FROM stars").get().verified, 0);
+  assert.equal((await tap("b".repeat(43))).status, 200);
+  const limited = await tap("c".repeat(43));
+  assert.equal(limited.status, 429);
+  assert.equal((await limited.json()).code, "unverified-limit");
+
+  const hidden = env(network, fakeKV(), { STARS: d1, ALLOW_UNVERIFIED_STARS: "true", COUNT_UNVERIFIED_STARS: "false" });
+  const counts = await (await worker.fetch(new Request("https://submit.example/v1/stars"), hidden, { waitUntil() {} })).json();
+  assert.deepEqual(counts["repo-stats"] ?? { stars: 0 }, { stars: 0 });
+});
+
+test("POST /v1/star: without ALLOW_UNVERIFIED_STARS a refused token is still 401", async () => {
+  const network = fakeNetwork({ indexIds: ["repo-stats"], deviceStatus: 400 });
+  const e = env(network, fakeKV(), { STARS: fakeD1() });
+  const response = await worker.fetch(starRequest({ id: "repo-stats", starred: true, voterToken: VOTER, deviceToken: "d".repeat(40) }), e, ctx);
+  assert.equal(response.status, 401);
 });

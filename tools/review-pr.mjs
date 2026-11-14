@@ -159,11 +159,16 @@ export function reviewScript({ root, id, baseRoot, prAuthor, isMaintainer = fals
     // Pull requests from the submission service are opened by its GitHub App
     // ("<name>[bot]") on behalf of an author who has no GitHub account here;
     // the body of the pull request says so. Only a person's handle is compared.
+    // An update must come from the same person as the first submission: the author in
+    // meta.json never changes, and an update opened from a GitHub account must be opened
+    // by that author. A new script only gets a note when the names differ.
+    const isUpdate = Boolean(baseMeta);
     if (prAuthor && !isBot(prAuthor) && meta.author.toLowerCase() !== String(prAuthor).toLowerCase() && !isMaintainer) {
-      add("author-mismatch", "soft", `meta.json author is "${meta.author}" but the pull request was opened by "${prAuthor}".`);
+      if (isUpdate) add("author-mismatch", "hard", `Updates to this script must be opened by its author, "${meta.author}", but this pull request was opened by "${prAuthor}".`);
+      else add("author-mismatch", "soft", `meta.json author is "${meta.author}" but the pull request was opened by "${prAuthor}".`);
     }
-    if (baseMeta && typeof baseMeta.author === "string" && baseMeta.author.toLowerCase() !== meta.author.toLowerCase()) {
-      add("author-changed", "soft", `The author changes from "${baseMeta.author}" to "${meta.author}".`);
+    if (isUpdate && typeof baseMeta.author === "string" && baseMeta.author.toLowerCase() !== meta.author.toLowerCase()) {
+      add("author-changed", "hard", `The author changes from "${baseMeta.author}" to "${meta.author}". Every update must keep the author of the first submission.`);
     }
   }
   if (meta && baseMeta) {

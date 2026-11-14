@@ -3,6 +3,9 @@
 // @icon        mug.fill
 // @color       #F59E0B
 // @widget      small, medium, rectangular, circular, inline
+// @version     1.0.0
+// @author      scriptwell
+// @category    utilities
 
 // ───────────────────────── Settings and data
 

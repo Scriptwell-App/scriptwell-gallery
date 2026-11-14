@@ -7,7 +7,7 @@
  * pull requests: write (issues: write for labels and comments, optional).
  */
 import { importPrivateKey, signJWT } from "./jwt.js";
-import { base64Encode, encoder } from "./util.js";
+import { base64Decode, base64Encode, decoder, encoder } from "./util.js";
 
 const API = "https://api.github.com";
 const USER_AGENT = "scriptwell-gallery-submit";
@@ -95,7 +95,7 @@ export class GitHub {
    *
    * @returns {{ url: string, number: number, created: boolean }}
    */
-  async submit({ id, files, title, body, commitMessage, comment }) {
+  async submit({ id, files, title, body, commitMessage, comment, labels = ["from-app"] }) {
     const branch = `submit/${id}`;
     const base = await this.repo("GET", `/git/ref/heads/${this.branch}`);
     const baseSha = base.object.sha;
@@ -118,12 +118,29 @@ export class GitHub {
     if (Array.isArray(open) && open.length > 0) {
       const pull = open[0];
       await this.bestEffort("POST", `/issues/${pull.number}/comments`, { body: comment });
+      // An update can come from a copy Apple does not vouch for even when the first version did.
+      if (labels.some((label) => label !== "from-app")) await this.bestEffort("POST", `/issues/${pull.number}/labels`, { labels });
       return { url: pull.html_url, number: pull.number, created: false };
     }
 
     const pull = await this.repo("POST", "/pulls", { title, head: branch, base: this.branch, body, maintainer_can_modify: true });
-    await this.bestEffort("POST", `/issues/${pull.number}/labels`, { labels: ["from-app"] });
+    await this.bestEffort("POST", `/issues/${pull.number}/labels`, { labels });
     return { url: pull.html_url, number: pull.number, created: true };
+  }
+
+  /**
+   * The author in the gallery's own copy of `scripts/<id>/meta.json`: the published one on the
+   * base branch, or else the one last submitted on `submit/<id>`. Undefined when neither exists.
+   * Must be read before submit() moves the branch.
+   */
+  async recordedAuthor(id) {
+    for (const ref of [this.branch, `submit/${id}`]) {
+      const file = await this.repoOptional("GET", `/contents/scripts/${encodeURIComponent(id)}/meta.json?ref=${encodeURIComponent(ref)}`);
+      if (!file || typeof file.content !== "string") continue;
+      const meta = JSON.parse(decoder.decode(base64Decode(file.content.replace(/\s/g, ""))));
+      if (typeof meta.author === "string") return meta.author;
+    }
+    return undefined;
   }
 
   /** Labels and comments need issues: write; a missing permission must not fail the submission. */

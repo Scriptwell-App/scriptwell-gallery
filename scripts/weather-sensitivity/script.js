@@ -4,6 +4,9 @@
 // @color       #F59E0B
 // @permissions location
 // @widget      small
+// @version     1.0.0
+// @author      scriptwell
+// @category    utilities
 
 // Widget Parameter: "F" or "C" to force a temperature unit.
 

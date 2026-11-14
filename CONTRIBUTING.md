@@ -10,7 +10,7 @@ mini-app for you to look over, then opens the pull request for you through
 the gallery's submission service. You need no GitHub account; only the author
 name you type is attached to the pull request. The app keeps the link so you
 can follow the review, and updates to the script are submitted the same way,
-from the same device.
+from the same device and under the same author name.
 
 If you would rather have the pull request under your own GitHub account
 (so you can answer the reviewer there), the same sheet offers **Open Pull
@@ -69,11 +69,11 @@ anything you would not want public.
 |---|---|
 | `id` | 3–50 characters: lowercase letters, digits, hyphens. Equals the folder name. Never changes. |
 | `name` | 1–50 characters. |
-| `author` | The name shown with the script: 1–39 letters, digits and hyphens. Use your GitHub handle (without `@`) if you have one; when you open the pull request yourself it should be that account. |
+| `author` | The name shown with the script: 1–39 letters, digits and hyphens. Use your GitHub handle (without `@`) if you have one; when you open the pull request yourself it should be that account. It cannot change after the first submission. |
 | `version` | `x.y.z`. Bump it whenever `script.js` changes. |
 | `description` | 1–280 characters. Say what the script does and what it contacts. |
-| `permissions` | Any of `network`, `location`, `calendar`, `reminders`, `notifications`, `clipboard`, `camera`, `microphone`, `contacts`, `health`, `cloudai`, `bluetooth`. Must match the `// @permissions` line in `script.js`. `[]` for none. |
-| `minAppVersion` | Lowest Scriptwell version it runs on, such as `1.0`. |
+| `permissions` | Any of `network`, `location`, `calendar`, `reminders`, `notifications`, `clipboard`, `camera`, `microphone`, `contacts`, `health`, `cloudai`, `bluetooth`, `motion`, `ar`. Must match the `// @permissions` line in `script.js`. `[]` for none. |
+| `minAppVersion` | Lowest Scriptwell version it runs on, such as `1.1`. |
 | `widgetSizes` | Any of `small`, `medium`, `large`, `extraLarge`, `circular`, `rectangular`, `inline`. `[]` if there is no widget. |
 | `license` | SPDX id. Default `MIT`. |
 | `category` | One of the App Store categories: `books`, `business`, `developer-tools`, `education`, `entertainment`, `finance`, `food-drink`, `games`, `graphics-design`, `health-fitness`, `kids`, `lifestyle`, `magazines-newspapers`, `medical`, `music`, `navigation`, `news`, `photo-video`, `productivity`, `reference`, `shopping`, `social-networking`, `sports`, `travel`, `utilities`, `weather`. |
@@ -102,12 +102,18 @@ Then plain JavaScript. The automated checks **reject**:
 - any API whose permission is not declared (`fetch` needs `network`, `Location` needs `location`, and so on)
 
 They **flag for a closer look** (not a rejection): long or base64-looking
-strings, many escapes, declared permissions that are never used, an `author`
-that differs from the pull request author.
+strings, many escapes, declared permissions that are never used, and a new
+script whose `author` differs from the pull request author.
+
+**Updates come from the same author.** Once a script is in the gallery, every
+update must keep the `author` of the first submission, and an update opened
+from a GitHub account must be opened by that account. Either one is a
+rejection. People who installed the script rely on an update coming from the
+person they installed it from; the app refuses an update whose author changed.
 
 ## Check it locally
 
-You need Node 20 or later.
+You need Node 22 or later (the service's tests in `worker/` need 22.5).
 
 ```bash
 cd tools && npm install
