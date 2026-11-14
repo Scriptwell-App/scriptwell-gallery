@@ -3,8 +3,8 @@
 // @icon        mug.fill
 // @color       #F59E0B
 // @widget      small, medium, rectangular, circular, inline
-// @version     1.0.0
-// @author      scriptwell
+// @version     1.0.1
+// @author      va4w
 // @category    utilities
 
 // ───────────────────────── Settings and data
@@ -87,80 +87,117 @@ Script.action("set", ({ field, value }) => {
 
 // ───────────────────────── Widget
 
-const BG = { light: "#FFFBEB", dark: "#1C1917" };
+const BG = { light: "#F5F5F4", dark: "#1C1917" };
+const btnLabel = (text, symbol) => Widget.hstack([
+  Widget.symbol(symbol, { size: 10, weight: "semibold" }),
+  Widget.text(text, { font: "caption", weight: "semibold" }),
+], { spacing: 3 });
+const AMBER = { light: "#D97706", dark: "#FBBF24" };
+const GAUGE_MAX = 1.5;
+const GAUGE_COLORS = ["green", "yellow", "orange", "red"];
+const clock = (date) => date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+const plural = (n) => (n === 1 ? "beer" : "beers");
+const pillColor = (bac) => (bac < 0.3 ? "emerald-500" : bac < 0.5 ? "amber-500" : bac < 1.0 ? "orange-500" : "red-500");
+
+function bacPill(bac, font = "subheadline") {
+  return Widget.text(fmt(bac), {
+    font, weight: "bold", design: "rounded", color: "white", monospacedDigit: true, invalidates: true,
+    padding: { horizontal: 10, vertical: 3 }, background: pillColor(bac), clip: "capsule",
+  });
+}
+
+function soberLine(sober, list) {
+  return Widget.hstack([
+    Widget.symbol(sober ? "moon.zzz.fill" : "checkmark.seal.fill", { size: 11, color: sober ? "indigo" : "green", fallback: sober ? "💤" : "✓" }),
+    Widget.text(sober ? `sober ~${clock(sober)}` : `sober · ${litres(list)} l total`, { font: "caption2", color: "secondary", lineLimit: 1 }),
+  ], { spacing: 4 });
+}
 
 function widgetContent(family, time) {
   const list = drinks();
   const count = list.length;
   const bac = bacAt(time, list);
-  const color = bacColor(bac);
+  const sober = bac > 0 ? new Date(time + (bac / ELIMINATION) * HOUR) : null;
 
   if (family === "inline") return Widget.text(`🍺 ${count} · ${fmt(bac)}`);
 
   if (family === "circular") {
-    return Widget.gauge(Math.min(bac, 1.5), {
-      min: 0, max: 1.5, style: "circular", valueLabel: String(count), label: "‰",
+    return Widget.gauge(Math.min(bac, GAUGE_MAX), {
+      min: 0, max: GAUGE_MAX, style: "circular", valueLabel: String(count), label: "‰", colors: GAUGE_COLORS,
     });
   }
 
   if (family === "rectangular") {
-    const sober = bac > 0 ? new Date(time + (bac / ELIMINATION) * HOUR) : null;
-    return Widget.vstack([
-      Widget.text(`🍺 ${count} beer${count === 1 ? "" : "s"}`, { font: "headline" }),
-      Widget.text(fmt(bac), { font: "title3", weight: "bold", design: "rounded" }),
-      sober
-        ? Widget.text(`sober ~${sober.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`, { font: "caption" })
-        : Widget.text("sober", { font: "caption" }),
-    ], { alignment: "leading", spacing: 0 });
+    return Widget.hstack([
+      Widget.gauge(Math.min(bac, GAUGE_MAX), { min: 0, max: GAUGE_MAX, style: "circularCapacity", valueLabel: String(count) }),
+      Widget.vstack([
+        Widget.text(fmt(bac), { font: "headline", weight: "bold", design: "rounded", monospacedDigit: true }),
+        Widget.text(`${count} ${plural(count)}`, { font: "caption" }),
+        Widget.text(sober ? `sober ~${clock(sober)}` : "sober", { font: "caption2", opacity: 0.8 }),
+      ], { alignment: "leading", spacing: 0 }),
+      Widget.spacer(),
+    ], { spacing: 8 });
   }
 
   const header = Widget.hstack([
-    Widget.symbol("mug.fill", { size: 16, color: "amber-500", fallback: "🍺" }),
-    Widget.text("Beer Counter", { font: "caption", weight: "semibold", color: "secondary" }),
+    Widget.symbol("mug.fill", { size: 12, color: AMBER, fallback: "🍺", accentable: true }),
+    Widget.text("BEER COUNTER", { font: "caption2", weight: "bold", color: "secondary", tracking: 0.8 }),
     Widget.spacer(),
   ], { spacing: 4 });
 
-  const countText = Widget.text(count, {
-    font: family === "small" ? 40 : 48, weight: "bold", design: "rounded",
-    transition: "numeric", invalidates: true, color: "amber-500", accentable: true,
-  });
-
-  const bacText = Widget.text(fmt(bac), {
-    font: "headline", weight: "semibold", design: "rounded", color, monospacedDigit: true, invalidates: true,
-  });
+  const countBlock = Widget.hstack([
+    Widget.text(count, {
+      font: family === "small" ? 38 : 30, weight: "heavy", design: "rounded",
+      transition: "numeric", invalidates: true, color: AMBER, accentable: true,
+    }),
+    Widget.text(plural(count), { font: "caption", weight: "medium", color: "secondary", padding: { bottom: family === "small" ? 7 : 4 } }),
+  ], { alignment: "bottom", spacing: 4 });
 
   if (family === "small") {
     return Widget.vstack([
       header,
-      Widget.hstack([countText, Widget.spacer(), bacText], { alignment: "bottom" }),
-      Widget.spacer(),
+      countBlock,
+      bacPill(bac, "caption"),
+      Widget.spacer(), 
       Widget.hstack([
-        Widget.button("−", "remove", null, { style: "bordered", id: "minus" }),
-        Widget.spacer(),
-        Widget.button("+ 🍺", "add", null, { style: "prominent", color: "amber-500", id: "plus" }),
-      ]),
+        Widget.button(Widget.symbol("minus", { size: 10, weight: "bold", fallback: "−" }), "remove", null, { style: "bordered", color: "amber-500", id: "minus" }),
+        Widget.button(btnLabel("Beer", "plus"), "add", null, { style: "prominent", color: "amber-500", id: "plus" }),
+      ], { spacing: 6 }),
     ], {
-      alignment: "leading", spacing: 4, background: BG,
+      alignment: "leading", spacing: 4,
       frame: { maxWidth: "infinity", maxHeight: "infinity", alignment: "topLeading" },
     });
   }
 
-  // medium (and larger)
-  const sober = bac > 0 ? new Date(time + (bac / ELIMINATION) * HOUR) : null;
-  return Widget.hstack([
+  // medium (and larger): header with pill, count and sober info side by side,
+  // a full-width gauge, and a full-width row of buttons along the bottom.
+  const mediumHeader = Widget.hstack([
+    Widget.symbol("mug.fill", { size: 12, color: AMBER, fallback: "🍺", accentable: true }),
+    Widget.text("BEER COUNTER", { font: "caption2", weight: "bold", color: "secondary", tracking: 0.8 }),
+    Widget.spacer(),
+    bacPill(bac, "caption"),
+  ], { spacing: 4 });
+
+  const infoRow = Widget.hstack([
+    countBlock,
+    Widget.spacer(),
     Widget.vstack([
-      header,
-      countText,
-      bacText,
-      Widget.text(sober ? `sober ~${sober.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : `${litres(list)} l total`,
-        { font: "caption2", color: "secondary" }),
-    ], { alignment: "leading", spacing: 2, frame: { maxWidth: "infinity", maxHeight: "infinity", alignment: "topLeading" } }),
-    Widget.vstack([
-      Widget.button("+ 1 Beer", "add", null, { style: "prominent", color: "amber-500", id: "plus", frame: { maxWidth: "infinity" } }),
-      Widget.button("− 1", "remove", null, { style: "bordered", id: "minus", frame: { maxWidth: "infinity" } }),
-      Widget.button("Reset", "reset", null, { style: "bordered", color: "red", id: "reset", frame: { maxWidth: "infinity" } }),
-    ], { spacing: 6, frame: { width: 120 } }),
-  ], { spacing: 12, background: BG, frame: { maxWidth: "infinity", maxHeight: "infinity" } });
+      soberLine(sober, list),
+      Widget.text(`${litres(list)} l this session`, { font: "caption2", color: "secondary", lineLimit: 1 }),
+    ], { alignment: "trailing", spacing: 1, padding: { bottom: 4 } }),
+  ], { alignment: "bottom", spacing: 8 });
+
+  return Widget.vstack([
+    mediumHeader,
+    infoRow,
+    Widget.gauge(Math.min(bac, GAUGE_MAX), { min: 0, max: GAUGE_MAX, style: "linearCapacity", colors: GAUGE_COLORS }),
+    Widget.spacer(0),
+    Widget.hstack([
+      Widget.button(btnLabel("Undo", "arrow.uturn.backward"), "remove", null, { style: "bordered", color: "amber-500", id: "minus", frame: { maxWidth: "infinity" } }),
+      Widget.button(btnLabel("Beer", "plus"), "add", null, { style: "prominent", color: "amber-500", id: "plus", frame: { maxWidth: "infinity" }, layoutPriority: 1 }),
+      Widget.button(btnLabel("Reset", "arrow.counterclockwise"), "reset", null, { style: "bordered", color: "red", id: "reset", frame: { maxWidth: "infinity" } }),
+    ], { spacing: 6 }),
+  ], { alignment: "leading", spacing: 3, padding: { horizontal: 14, vertical: 0 }, frame: { maxWidth: "infinity", maxHeight: "infinity", alignment: "topLeading" } });
 }
 
 Script.widget(({ family }) => {
@@ -190,7 +227,7 @@ function promilleChart() {
     points.push({ x: (t - start) / HOUR, y: Math.round(bacAt(t, list) * 100) / 100 });
   }
   return Widget.chart(points, {
-    kind: "area", smooth: true, color: "amber-500",
+    kind: "area", smooth: true, color: "amber-500", lineWidth: 3,
     rule: { value: 0.5, color: "red", label: "0.5 ‰" },
     xTitle: "hours since first beer", yTitle: "‰",
     frame: { height: 180 },
@@ -203,54 +240,85 @@ Script.ui(() => {
   const now = Date.now();
   const bac = bacAt(now, list, s);
   const sober = soberAt(now);
+  const chart = promilleChart();
+
+  const hero = Widget.vstack([
+    Widget.hstack([
+      Widget.vstack([
+        Widget.text("This session", { font: "caption", weight: "semibold", color: "secondary", transform: "uppercase", tracking: 1 }),
+        Widget.text(list.length, { font: 72, weight: "heavy", design: "rounded", color: AMBER, transition: "numeric" }),
+        Widget.text(`${plural(list.length)} · ${litres(list)} l`, { font: "subheadline", color: "secondary" }),
+      ], { alignment: "leading", spacing: 0 }),
+      Widget.spacer(),
+      Widget.vstack([
+        Widget.gauge(Math.min(bac, GAUGE_MAX), {
+          min: 0, max: GAUGE_MAX, style: "circularCapacity", valueLabel: bac.toFixed(2), colors: GAUGE_COLORS,
+          scale: 1.5, padding: 18,
+        }),
+        bacPill(bac, "caption"),
+      ], { spacing: 2 }),
+    ], { alignment: "center" }),
+    Widget.hstack(sober ? [
+      Widget.symbol("moon.zzz.fill", { size: 14, color: "indigo", fallback: "💤" }),
+      Widget.text("Sober", { font: "footnote", color: "secondary" }),
+      Widget.date(sober, { style: "relative", font: "footnote", weight: "semibold" }),
+      Widget.spacer(),
+      Widget.date(sober, { style: "time", font: "footnote", color: "secondary" }),
+    ] : [
+      Widget.symbol("checkmark.seal.fill", { size: 14, color: "green", fallback: "✓" }),
+      Widget.text("You're sober", { font: "footnote", weight: "semibold" }),
+      Widget.spacer(),
+    ], { spacing: 6, padding: { horizontal: 12, vertical: 10 }, background: "thinMaterial", cornerRadius: 12 }),
+  ], { spacing: 14, padding: 18, background: BG, cornerRadius: 20 });
 
   return {
     title: "🍺 Beer Counter",
     content: Widget.vstack([
-      Widget.card([
-        Widget.hstack([
-          Widget.stat("Beers", list.length, { symbol: "mug.fill", color: "amber-500", detail: `${litres(list)} l` }),
-          Widget.spacer(),
-          Widget.stat("Promille", fmt(bac), { symbol: "drop.fill", color: bacColor(bac), detail: sober ? "estimated" : "sober" }),
-        ], { alignment: "top" }),
-        sober
-          ? Widget.hstack([
-              Widget.text("Sober", { font: "footnote", color: "secondary" }),
-              Widget.date(sober, { style: "relative", font: "footnote", weight: "semibold" }),
-              Widget.spacer(),
-              Widget.date(sober, { style: "time", font: "footnote", color: "secondary" }),
-            ], { spacing: 4 })
-          : null,
-      ], { title: "This session", symbol: "sparkles", color: "amber-500" }),
+      hero,
 
       Widget.hstack([
-        Widget.button("− 1", "remove", null, { style: "bordered", frame: { maxWidth: "infinity" } }),
-        Widget.button(`+ 1 Beer (${s.size} ml)`, "add", null, { style: "prominent", color: "amber-500", frame: { maxWidth: "infinity" } }),
+        Widget.button(btnLabel("Undo", "arrow.uturn.backward"), "remove", null, { style: "bordered", color: "amber-500" }),
+        Widget.button(btnLabel(`Beer · ${s.size} ml`, "plus"), "add", null, { style: "prominent", color: "amber-500" }),
       ], { spacing: 10 }),
 
-      promilleChart(),
+      chart ? Widget.card([chart], { title: "Promille curve", symbol: "chart.xyaxis.line", color: "amber-500" }) : null,
 
       list.length
         ? Widget.list(list.slice(-8).reverse().map((d, i) => ({
             title: new Date(d.t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             subtitle: `${d.ml} ml · ${d.abv}%`,
             detail: `#${list.length - i}`,
-            symbol: "mug",
+            symbol: "mug.fill",
             color: "amber-500",
           })), { title: "Latest beers" })
-        : Widget.text("No beers yet. Cheers! 🍻", { color: "secondary", align: "center" }),
+        : Widget.vstack([
+            Widget.text("🍻", { font: 44 }),
+            Widget.text("No beers yet. Cheers!", { font: "headline" }),
+            Widget.text("Tap “Beer” to log your first one.", { font: "footnote", color: "secondary" }),
+          ], { spacing: 4, padding: 20, frame: { maxWidth: "infinity" } }),
 
       Widget.card([
         Widget.stepper(`Body weight: ${s.weight} kg`, s.weight, "set", { field: "weight" }, { min: 40, max: 200 }),
         Widget.picker([{ label: "Male", value: "male" }, { label: "Female", value: "female" }], s.sex, "set", { field: "sex" }, { style: "segmented" }),
-        Widget.text("Beer size", { font: "caption", color: "secondary" }),
-        Widget.picker(SIZES, s.size, "set", { field: "size" }, { style: "menu" }),
-        Widget.text(`Alcohol: ${s.abv.toFixed(1)} %`, { font: "caption", color: "secondary" }),
+        Widget.divider(),
+        Widget.hstack([
+          Widget.label("Beer size", "ruler", { color: "secondary" }),
+          Widget.spacer(),
+          Widget.picker(SIZES, s.size, "set", { field: "size" }, { style: "menu" }),
+        ]),
+        Widget.hstack([
+          Widget.label("Alcohol", "percent", { color: "secondary" }),
+          Widget.spacer(),
+          Widget.text(`${s.abv.toFixed(1)} %`, { font: "subheadline", weight: "semibold", design: "rounded", monospacedDigit: true }),
+        ]),
         Widget.slider(s.abv, "set", { field: "abv" }, { min: 0, max: 12, step: 0.1, color: "amber-500" }),
       ], { title: "Settings", symbol: "gearshape.fill", color: "gray" }),
 
-      Widget.button("Reset session", "reset", null, { style: "bordered", color: "red", frame: { maxWidth: "infinity" } }),
-      Widget.text("Promille is a rough Widmark estimate. Never use it to decide whether you can drive.", { font: "caption2", color: "secondary", align: "center" }),
+      Widget.button(btnLabel("Reset session", "arrow.counterclockwise"), "reset", null, { style: "plain", color: "red" }),
+      Widget.hstack([
+        Widget.symbol("exclamationmark.triangle.fill", { size: 12, color: "orange", fallback: "⚠️" }),
+        Widget.text("Promille is a rough Widmark estimate. Never use it to decide whether you can drive.", { font: "caption2", color: "secondary" }),
+      ], { spacing: 6, alignment: "top", padding: { horizontal: 4 } }),
     ], { spacing: 16, padding: 16 }),
   };
 });

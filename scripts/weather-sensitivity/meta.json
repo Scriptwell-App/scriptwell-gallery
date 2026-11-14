@@ -1,8 +1,8 @@
 {
   "id": "weather-sensitivity",
   "name": "Weather Sensitivity",
-  "author": "scriptwell",
-  "version": "1.0.0",
+  "author": "va4w",
+  "version": "1.0.1",
   "description": "Small widget for weather-sensitive people: pressure trend, temperature swings, humidity and an overall strain level",
   "permissions": [
     "location"
