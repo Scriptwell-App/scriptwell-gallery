@@ -4,6 +4,9 @@
 // @color       #FF6600
 // @permissions network
 // @widget      medium
+// @version     1.0.0
+// @author      scriptwell
+// @category    utilities
 
 const API = "https://hacker-news.firebaseio.com/v0";
 const MAX_AGE = 15 * 60 * 1000; // refetch at most every 15 minutes

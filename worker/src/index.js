@@ -11,12 +11,16 @@
  * What it does, in order: size and shape checks; rate limits (KV counters per
  * IP and overall, per UTC day); the gallery's own checks (schema, analyzer,
  * word filter, icon); Apple DeviceCheck (the request comes from a real install
- * of the app); ownership (the first submitter of an id gets a secret the
- * app keeps; updates must present it; ids already in the gallery that have no
- * owner here cannot be claimed); then one commit and one pull request on the
+ * of the app; when Apple will not vouch for it, as for sideloaded and
+ * self-built copies, the submission goes on as "unverified" under much lower
+ * daily limits and its pull request says so); ownership (the first submitter of an id gets a secret the
+ * app keeps; updates must present it and keep the author name of the first
+ * submission; ids already in the gallery that have no owner here cannot be
+ * claimed); then one commit and one pull request on the
  * gallery repository through a GitHub App.
  *
- * It stores: the SHA-256 of each owner secret, keyed by script id, and the
+ * It stores: the SHA-256 of each owner secret and the author name it was first
+ * submitted under, keyed by script id, and the
  * daily counters (KV); and for stars, one hash per install and script (D1).
  * Nothing about devices or people.
  */
@@ -83,13 +87,31 @@ async function readBody(request) {
 async function checkRateLimits(env, request) {
   const day = utcDay();
   const ip = request.headers.get("cf-connecting-ip") || "unknown";
-  const keys = [
+  return countAgainst(env, [
     { key: `rl:ip:${await sha256Hex(ip)}:${day}`, limit: Number(env.IP_DAILY_LIMIT || 30) },
     { key: `rl:all:${day}`, limit: Number(env.GLOBAL_DAILY_LIMIT || 300) },
-  ];
+  ], () => new HttpError(429, "Too many submissions today. Try again tomorrow.", { code: "rate-limited" }));
+}
+
+/**
+ * Tighter counters for submissions Apple did not vouch for. Every one is still
+ * reviewed by a person before it is published; these only keep a scripted
+ * flood from burying the real ones.
+ */
+async function checkUnverifiedLimits(env, request) {
+  const day = utcDay();
+  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+  return countAgainst(env, [
+    { key: `rl:unverified:ip:${await sha256Hex(ip)}:${day}`, limit: Number(env.UNVERIFIED_IP_DAILY_LIMIT || 3) },
+    { key: `rl:unverified:all:${day}`, limit: Number(env.UNVERIFIED_DAILY_LIMIT || 20) },
+  ], () => new HttpError(429, "Copies of the app that are not from the App Store or TestFlight can send only a few submissions a day. Try again tomorrow, or open a pull request on GitHub.", { code: "unverified-limit" }));
+}
+
+/** Throws `error()` when any counter is at its limit; returns a function that adds one to each. */
+async function countAgainst(env, keys, error) {
   const counts = await Promise.all(keys.map(({ key }) => env.SUBMISSIONS.get(key)));
   keys.forEach(({ limit }, index) => {
-    if (Number(counts[index] || 0) >= limit) throw new HttpError(429, "Too many submissions today. Try again tomorrow.", { code: "rate-limited" });
+    if (Number(counts[index] || 0) >= limit) throw error();
   });
   return async () => {
     // KV is eventually consistent; these are soft limits against floods, not accounting.
@@ -111,9 +133,18 @@ async function submit(request, env, ctx) {
   }
   const { meta, files, findings, analysis } = checked;
 
+  // Sideloaded and self-built copies are signed by another team, so Apple will
+  // not vouch for them. They may still submit, as "unverified", within much
+  // lower limits; a problem on this side is still an error for everyone.
+  let verified = true;
   if (env.REQUIRE_DEVICE_CHECK !== "false") {
     const device = await verifyDeviceToken(env, payload.deviceToken, fetchImpl);
-    if (!device.ok) throw new HttpError(401, device.reason, { code: "device-check" });
+    if (!device.ok) {
+      if (device.kind === "server" || env.ALLOW_UNVERIFIED_SUBMISSIONS !== "true") throw new HttpError(401, device.reason, { code: "device-check" });
+      const countUnverified = await checkUnverifiedLimits(env, request);
+      ctx.waitUntil(countUnverified());
+      verified = false;
+    }
   }
 
   // Ownership of the id.
@@ -144,6 +175,16 @@ async function submit(request, env, ctx) {
     privateKey: env.GITHUB_APP_PRIVATE_KEY,
     fetch: fetchImpl,
   });
+
+  // Every update keeps the author of the first submission, so people who installed the
+  // script can trust an update comes from the same person. Records from before the
+  // author was stored never take the update's word for it: the author is read from the
+  // gallery's own meta.json, published or last submitted.
+  let firstAuthor = record && typeof record.author === "string" ? record.author : undefined;
+  if (record && firstAuthor === undefined) firstAuthor = await github.recordedAuthor(meta.id);
+  if (firstAuthor !== undefined && firstAuthor.toLowerCase() !== meta.author.toLowerCase()) {
+    throw new HttpError(403, `Updates must use the author name of the first submission, "${firstAuthor}".`, { code: "author-changed", author: firstAuthor });
+  }
   const prefixed = {};
   for (const [name, bytes] of Object.entries(files)) prefixed[`scripts/${meta.id}/${name}`] = bytes;
 
@@ -151,16 +192,19 @@ async function submit(request, env, ctx) {
     id: meta.id,
     files: prefixed,
     title: pullRequestTitle(meta, isUpdate),
-    body: pullRequestBody({ meta, app, findings, analysis, isUpdate, files, repository: env.GALLERY_REPOSITORY }),
+    body: pullRequestBody({ meta, app, findings, analysis, isUpdate, files, repository: env.GALLERY_REPOSITORY, verified }),
     commitMessage: commitMessage(meta, isUpdate),
-    comment: updateComment({ meta, app, findings }),
+    comment: updateComment({ meta, app, findings, verified }),
+    labels: verified ? ["from-app"] : ["from-app", "unverified"],
   });
 
   if (newOwnerToken) {
-    await env.SUBMISSIONS.put(ownerKey, JSON.stringify({ hash: await sha256Hex(newOwnerToken), createdAt: new Date().toISOString(), pullRequest: pull.number }));
+    await env.SUBMISSIONS.put(ownerKey, JSON.stringify({ hash: await sha256Hex(newOwnerToken), author: meta.author, createdAt: new Date().toISOString(), pullRequest: pull.number }));
+  } else if (typeof record.author !== "string") {
+    await env.SUBMISSIONS.put(ownerKey, JSON.stringify({ ...record, author: firstAuthor ?? meta.author }));
   }
 
-  const response = { pullRequest: pull.url, number: pull.number, created: pull.created, findings: findings.filter((f) => f.severity === "soft") };
+  const response = { pullRequest: pull.url, number: pull.number, created: pull.created, verified, findings: findings.filter((f) => f.severity === "soft") };
   if (newOwnerToken) response.ownerToken = newOwnerToken;
   return json(200, response);
 }

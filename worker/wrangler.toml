@@ -41,6 +41,20 @@ GLOBAL_DAILY_LIMIT = "300"
 STAR_IP_DAILY_LIMIT = "300"
 STAR_GLOBAL_DAILY_LIMIT = "20000"
 
+# Copies of the app Apple DeviceCheck does not vouch for: sideloaded (AltStore,
+# SideStore, Sideloadly) and self-built ones, signed by another team. They may
+# submit and star within these lower limits. Their pull requests carry the
+# "unverified" label and a note; their stars are stored with verified = 0.
+# Set ALLOW_UNVERIFIED_* to "false" to refuse them again (401, as before), or
+# COUNT_UNVERIFIED_STARS to "false" to keep their stars out of the counts.
+ALLOW_UNVERIFIED_SUBMISSIONS = "true"
+UNVERIFIED_IP_DAILY_LIMIT = "3"
+UNVERIFIED_DAILY_LIMIT = "20"
+ALLOW_UNVERIFIED_STARS = "true"
+COUNT_UNVERIFIED_STARS = "true"
+UNVERIFIED_STAR_IP_DAILY_LIMIT = "30"
+UNVERIFIED_STAR_DAILY_LIMIT = "2000"
+
 # Secrets, set with `wrangler secret put <NAME>`, never in this file:
 #   GITHUB_APP_PRIVATE_KEY   the App's private key (.pem as downloaded from GitHub)
 #   DEVICECHECK_PRIVATE_KEY  the DeviceCheck key (.p8 as downloaded from Apple)

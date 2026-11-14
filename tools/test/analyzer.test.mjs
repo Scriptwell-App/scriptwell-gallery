@@ -382,6 +382,40 @@ test("updates: unchanged version and status changes are flagged", () => {
   assert.ok(!ruleIds(byMaintainer).includes("status-changed"));
 });
 
+test("updates: the author must stay the same as in the first submission", () => {
+  const base = makeRepo({ "my-script": goodFiles() });
+  const bumped = (overrides) => makeRepo({
+    "my-script": goodFiles({
+      "script.js": CLEAN + "console.log('changed');\n",
+      "meta.json": JSON.stringify(validMeta({ version: "1.0.1", ...overrides })),
+    }),
+  });
+
+  const same = reviewScript({ root: bumped({}), id: "my-script", baseRoot: base, prAuthor: "octocat" });
+  assert.deepEqual(hardIds(same), [], JSON.stringify(same.findings));
+
+  // Case does not count as a different name.
+  const recased = reviewScript({ root: bumped({ author: "OctoCat" }), id: "my-script", baseRoot: base, prAuthor: "octocat" });
+  assert.deepEqual(hardIds(recased), [], JSON.stringify(recased.findings));
+
+  // The service's bot opens pull requests for app users; the author in meta.json still cannot change.
+  const renamed = reviewScript({ root: bumped({ author: "someone-else" }), id: "my-script", baseRoot: base, prAuthor: "scriptwell-submissions[bot]" });
+  assert.ok(hardIds(renamed).includes("author-changed"), JSON.stringify(renamed.findings));
+
+  // An update opened from someone else's GitHub account is blocked, even with the original author in meta.json.
+  const otherAccount = reviewScript({ root: bumped({}), id: "my-script", baseRoot: base, prAuthor: "someone-else" });
+  assert.ok(hardIds(otherAccount).includes("author-mismatch"), JSON.stringify(otherAccount.findings));
+
+  // A maintainer may open an update on the author's behalf, but cannot change the author.
+  const byMaintainer = reviewScript({ root: bumped({}), id: "my-script", baseRoot: base, prAuthor: "maintainer", isMaintainer: true });
+  assert.deepEqual(hardIds(byMaintainer), [], JSON.stringify(byMaintainer.findings));
+
+  // A new script opened by someone other than the named author is only noted.
+  const fresh = reviewScript({ root: base, id: "my-script", prAuthor: "someone-else" });
+  assert.ok(ruleIds(fresh).includes("author-mismatch"));
+  assert.ok(!hardIds(fresh).includes("author-mismatch"));
+});
+
 test("submission text cannot inject markdown into the comment", () => {
   const meta = validMeta({ description: "nice | table `break` @someone <b>bold</b>" });
   const root = makeRepo({ "my-script": goodFiles({ "meta.json": JSON.stringify(meta) }) });

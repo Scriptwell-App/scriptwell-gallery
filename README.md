@@ -21,7 +21,7 @@ app <── index.json, scripts and screenshots on GitHub Pages <── publish.
 
 | Path | What it is |
 |---|---|
-| `scripts/<id>/` | One folder per script: `script.js`, `meta.json`, `icon.png`, optional `README.md` and `screenshots/` (one PNG per widget size plus `app.png`, captured in the app). Starts empty; scripts arrive by pull request |
+| `scripts/<id>/` | One folder per script: `script.js`, `meta.json`, `icon.png`, optional `README.md` and `screenshots/` (one PNG per widget size plus `app.png`, captured in the app). Scripts arrive by pull request |
 | `featured.json` | The front page: `hero` (the banner), `editorsChoice` and one-line `blurbs`, all by script id |
 | `stats.json` | Stars per script, written every six hours by the `stars.yml` workflow; never edit by hand |
 | `schema/meta.schema.json` | JSON Schema for `meta.json` |
@@ -169,7 +169,8 @@ commit.
   (`rules` and `textFilter.words`). That file and `analyzer-core.js` are shared
   with the app: change them in the app repository and copy them here with its
   `scripts/sync-analyzer.sh`, so the gallery and the app never disagree.
-  Extending `textFilter.words` here alone is fine; sync it back later.
+  Do not edit them here alone: the app's tests compare the two copies, and the
+  next sync would overwrite the change.
 - **`meta.json` fields:** edit `schema/meta.schema.json`. Removing or renaming
   a field needs an app change first.
 - Run `npm test` in `tools/` before merging tool changes; `tools-test.yml`
@@ -186,7 +187,7 @@ npm test
 ```
 
 ```bash
-node analyze.mjs ../scripts/repo-stats/script.js
+node analyze.mjs ../scripts/hn-top-story/script.js
 ```
 
 ```bash

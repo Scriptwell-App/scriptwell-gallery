@@ -3,6 +3,9 @@
 // @icon        character.book.closed.fill
 // @color       #4338CA
 // @widget      small, medium, large, rectangular, inline
+// @version     1.0.0
+// @author      scriptwell
+// @category    utilities
 
 // ─────────────────────────────────────────── Data
 // [language, word, romanization, writing system, speech voice, meaning of each character]

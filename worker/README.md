@@ -22,12 +22,19 @@ everyone else.
 ## What it stores
 
 - `owner:<id>`: the SHA-256 of the secret handed to the device that first
-  submitted `<id>`, the date, and the pull request number. Updates to that id
-  must present the secret. Nothing identifies the device or the person.
-- `rl:ip:<sha256 of address>:<day>` and `rl:all:<day>`: counters that expire
-  after two days.
+  submitted `<id>`, the author name it was submitted under, the date, and the
+  pull request number. Updates to that id must present the secret and use the
+  same author name (`author-changed` otherwise; case does not matter). For
+  records from before the author was stored, the Worker reads it from the
+  gallery's own `scripts/<id>/meta.json` (published on the base branch, or
+  else last submitted on `submit/<id>`) and stores it; it never takes the
+  update's word for it.
+  Nothing identifies the device.
+- `rl:ip:<sha256 of address>:<day>` and `rl:all:<day>`, and the same under
+  `rl:unverified:` for unverified installs: counters that expire after two days.
 - In D1 (`STARS`), for stars: one row per script and install, holding
-  `sha256(<install secret> + ":" + <script id>)` and the date; carried-over
+  `sha256(<install secret> + ":" + <script id>)`, the date and whether
+  DeviceCheck vouched for the install; carried-over
   counts in `star_baseline`; daily counters in `star_limits`.
 
 The DeviceCheck token is forwarded to Apple and not kept. Request logs are
@@ -137,6 +144,37 @@ open pull requests for `scripts/<id>/`, which is what submissions are.
 - A resubmission while a pull request is open updates the branch and adds a
   comment; CI runs again.
 - `cleanup.yml` deletes `submit/*` branches when their pull request closes.
+- Pull requests from unverified installs also carry the `unverified` label and
+  a note at the top of the body (see below). Create that label too.
+
+### Unverified installs
+
+Apple only vouches (DeviceCheck) for copies of the app signed by the team that
+owns the key. Sideloaded copies (AltStore, SideStore, Sideloadly) and copies
+people build themselves are signed by someone else, so Apple refuses their
+tokens. Such requests are let through as **unverified** instead of being
+refused:
+
+- Submissions go through the same checks and ownership rules, under their
+  own daily limits (`UNVERIFIED_IP_DAILY_LIMIT`, 3 per address, and
+  `UNVERIFIED_DAILY_LIMIT`, 20 across everyone; the 429 has the code
+  `unverified-limit`). The pull request is labelled `unverified`, its body says
+  so, and the app tells the author. Review them as usual; nothing is published
+  without a merge either way.
+- Stars count like any other, under their own limits
+  (`UNVERIFIED_STAR_IP_DAILY_LIMIT`, 30, and `UNVERIFIED_STAR_DAILY_LIMIT`,
+  2,000), and are stored with `verified = 0`.
+
+Only a refused or missing token counts as unverified. A problem on this side
+(DeviceCheck not configured, the key refused, Apple failing) is still a 401
+for everyone. To refuse unverified installs again, set
+`ALLOW_UNVERIFIED_SUBMISSIONS` or `ALLOW_UNVERIFIED_STARS` to `"false"`. If
+unverified stars are abused, set `COUNT_UNVERIFIED_STARS = "false"` to leave
+them out of the counts, or delete them:
+
+```bash
+npx wrangler d1 execute scriptwell-stars --remote --command "DELETE FROM stars WHERE verified = 0"
+```
 
 ### Testing from the Simulator
 
@@ -184,9 +222,11 @@ stars.yml (every 6 h) ──GET /v1/stars──► Worker ──► stats.json �
   once and keeps it in the Keychain. The Worker stores only
   `sha256(voterToken + ":" + id)`, so it can count an install once and let it
   take the star back, but cannot link two stars, or a star and a device.
-- **Only real installs.** Every tap carries a DeviceCheck token, checked like
+- **Real installs, mostly.** Every tap carries a DeviceCheck token, checked like
   submissions. Several devices can still star several times; that is the limit
-  of what can be done without accounts.
+  of what can be done without accounts. Taps Apple will not vouch for
+  (sideloaded and self-built copies) count too, within lower limits; see
+  [Unverified installs](#unverified-installs).
 - **Only published scripts.** The id must be in `index.json` (cached five
   minutes).
 - **Limits** live in D1, not KV (KV's free plan allows 1,000 writes a day):

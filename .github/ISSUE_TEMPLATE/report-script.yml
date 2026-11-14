@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for reporting. Every report is reviewed. A script that breaks the
-        [guidelines](https://github.com/va4w/scriptwell-gallery/blob/main/GUIDELINES.md) is hidden from the gallery.
+        [guidelines](https://github.com/Scriptwell-App/scriptwell-gallery/blob/main/GUIDELINES.md) is hidden from the gallery.
         Issues here are public.
   - type: input
     id: script-id

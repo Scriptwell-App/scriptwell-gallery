@@ -2,6 +2,9 @@
 // @description A quick colour vision screening with dot plates, in the style of Ishihara tests
 // @icon        eye.fill
 // @color       #E11D48
+// @version     1.0.0
+// @author      scriptwell
+// @category    utilities
 
 // ───────────── Digit shapes (5 × 7 bitmaps)
 

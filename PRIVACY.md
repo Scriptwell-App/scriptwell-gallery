@@ -1,8 +1,8 @@
 # Scriptwell privacy policy
 
-*Last updated: 12 November 2026. Applies to the Scriptwell app for iPhone, iPad and Mac, and to this gallery.*
+*Last updated: 13 November 2026. Applies to the Scriptwell app for iPhone, iPad and Mac, and to this gallery.*
 
-The short version: Scriptwell collects nothing. There are no accounts, no analytics, no advertising and no tracking, and the developer never receives any data from the app. What follows describes, feature by feature, what stays on your device, what leaves it and why, so you can check it against the app itself.
+The short version: Scriptwell collects nothing. There are no accounts, no analytics, no advertising and no tracking, and the developer receives nothing from the app unless you submit a script to the gallery or star one (see "The gallery" below). What follows describes, feature by feature, what stays on your device, what leaves it and why, so you can check it against the app itself.
 
 ## What Scriptwell collects
 
@@ -10,9 +10,9 @@ Nothing. The app has no sign-in, no telemetry, no crash reporting service and no
 
 ## When the app itself uses the network
 
-The app makes network requests on its own in exactly two cases.
+Apart from submitting a script and starring one, which are described under "The gallery" below, the app makes network requests on its own in two cases.
 
-1. **Loading the gallery.** The Gallery tab downloads `index.json`, script files, icons and readme files from this repository's GitHub Pages site (`va4w.github.io`). GitHub receives the ordinary request data any web server sees, such as your IP address; see [GitHub's privacy statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement). Nothing about you is sent along, and the app does not tell the gallery which scripts you install.
+1. **Loading the gallery.** The Gallery tab downloads `index.json`, script files, icons and readme files from this repository's GitHub Pages site (`scriptwell-app.github.io`). GitHub receives the ordinary request data any web server sees, such as your IP address; see [GitHub's privacy statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement). Nothing about you is sent along, and the app does not tell the gallery which scripts you install.
 2. **The cloud model.** The writing assistant uses Claude, and only with an Anthropic API key you enter in Settings; without one it is unavailable. Only when you use the assistant, or when a script you approved for the `cloudai` permission calls `AI.cloud`, does the app send your request, the script you are editing and Scriptwell's documentation to Anthropic's API, authenticated with your key. Scripts' own `AI` calls use Apple's on-device model and send nothing. The app shows which model is in use on every assistant request. Your key is stored in the Keychain on your device and is sent nowhere else. Anthropic's handling of those requests is governed by [Anthropic's privacy policy](https://www.anthropic.com/privacy).
 
 Weather, places and maps shown by scripts are fetched from Apple's services (WeatherKit, Apple Maps), the same way any weather or map app does; only the coordinates or search text a script passes are sent.
@@ -34,6 +34,7 @@ Scripts are small JavaScript files. A script can use a capability only if it dec
 | `notifications` | Schedule local notifications | iOS prompt |
 | `bluetooth` | Scan and talk to Bluetooth LE devices while the script runs | iOS prompt; connections end with the run |
 | `motion` | Compass, motion sensors, pedometer, barometer | iOS prompt where the system requires one |
+| `ar` | A camera view with objects placed in your surroundings, only while the script is on screen | iOS camera prompt |
 | `cloudai` | Send text to the cloud model you configured | Off unless you chose the cloud model and entered a key |
 
 Photos come through the system photo picker, which runs outside the app; the app has no photo-library access and asks for none. Pictures a script receives are re-encoded without location or camera metadata and stored in that script's own folder. Text, barcode and image recognition run on the device with Apple's Vision framework. Translation and the on-device model also run on the device.
@@ -70,4 +71,4 @@ Changes to this policy are made as commits to this file, so its history is publi
 
 ## Contact
 
-Open an issue in this repository: https://github.com/va4w/scriptwell-gallery/issues
+Open an issue in this repository: https://github.com/Scriptwell-App/scriptwell-gallery/issues

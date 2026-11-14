@@ -47,12 +47,16 @@ function findingLines(findings) {
   return soft.map((f) => `- ${code(f.ruleId, 40)}${f.line ? ` (line ${Number(f.line) || 0})` : ""}: ${code(f.message, 300)}`);
 }
 
-export function pullRequestBody({ meta, app, findings, analysis, isUpdate, files = {}, repository }) {
+const UNVERIFIED_NOTE =
+  "> **Unverified install.** Apple DeviceCheck did not vouch for the copy of the app this came from: it is sideloaded, self-built, or not the app at all. The gallery checks ran as usual; review the script with that in mind.";
+
+export function pullRequestBody({ meta, app, findings, analysis, isUpdate, files = {}, repository, verified = true }) {
   const used = analysis && Array.isArray(analysis.usedPermissions) ? analysis.usedPermissions : [];
   const lines = [
     MARKER,
     `Submitted from the Scriptwell app (version ${code(app && app.version, 20)}) on behalf of ${code(meta.author, 39)}.`,
     "",
+    ...(verified ? [] : [UNVERIFIED_NOTE, ""]),
     "The author has **no GitHub account attached** to this pull request. They see its state in the app and can push a new version from the app, which updates this branch and adds a comment here. Questions asked here may go unanswered; a blocking problem is best handled by closing with a short reason, which the app shows them.",
     "",
     "## What the script does",
@@ -83,11 +87,12 @@ export function pullRequestBody({ meta, app, findings, analysis, isUpdate, files
   return lines.join("\n") + "\n";
 }
 
-export function updateComment({ meta, app, findings }) {
+export function updateComment({ meta, app, findings, verified = true }) {
   return [
     MARKER,
     `A new version of this submission arrived from the Scriptwell app (version ${code(app && app.version, 20)}): ${code(meta.version, 20)}. The branch was updated; CI runs again.`,
     "",
+    ...(verified ? [] : [UNVERIFIED_NOTE, ""]),
     ...findingLines(findings),
   ].join("\n") + "\n";
 }
