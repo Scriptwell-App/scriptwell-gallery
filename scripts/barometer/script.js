@@ -5,7 +5,7 @@
 // @icon        barometer
 // @color       #0EA5E9
 // @version     1.0.0
-// @author      scriptwell
+// @author      scriptwelleueue
 // @category    weather
 
 // How it works
